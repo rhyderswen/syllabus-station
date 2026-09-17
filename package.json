@@ -6,9 +6,12 @@
   "scripts": {
     "dev": "nodemon -w src/server -x tsx src/server/main.ts",
     "start": "NODE_ENV=production tsx src/server/main.ts",
-    "build": "vite build"
+    "build": "vite build",
+    "contract:emit": "prisma contract emit"
   },
   "dependencies": {
+    "@prisma/orm-postgres": "8.0.0-rc.8",
+    "dotenv": "^17.4.2",
     "express": "^5.1.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
