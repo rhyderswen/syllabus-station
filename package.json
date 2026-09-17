@@ -10,6 +10,8 @@
     "contract:emit": "prisma contract emit"
   },
   "dependencies": {
+    "@prisma/orm-postgres": "8.0.0-rc.8",
+    "dotenv": "^17.4.2",
     "@mantine/core": "^9.7.2",
     "@mantine/dates": "^9.7.2",
     "@mantine/form": "^9.6.2",
