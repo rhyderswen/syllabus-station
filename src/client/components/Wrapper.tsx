@@ -12,7 +12,7 @@ const Wrapper = ({ children }: WrapperProps) => {
       strategy="grid"
       size={850}
       mih="100dvh"
-      style={{ gridTemplateRows: "auto 1fr auto" }}
+      style={{ gridTemplateRows: "auto minmax(500px, 1fr) auto" }}
     >
       <Box component="header" data-breakout bg="var(--cwrublue)" p="md">
         <Group data-container c="white" justify="center" display='flex'>
@@ -31,12 +31,14 @@ const Wrapper = ({ children }: WrapperProps) => {
           </Button>
         </Group>
       </Box>
+
       {children}
+      
       <Box component="footer" data-breakout bg="var(--cwrugray)" p="md">
         <Group data-container justify="center" display='flex'>
           <div style={{flex:1}}>
             <ul>
-              <li><a href='/'>Related link 1</a></li>
+              <li><a href='/'>Log Out</a></li>
               <li><a href='/'>Related link 2</a></li>
               <li><a href='/'>Related link 3</a></li>
             </ul>
