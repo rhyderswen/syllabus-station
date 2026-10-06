@@ -16,17 +16,17 @@ const Wrapper = ({ children }: WrapperProps) => {
     >
       <Box component="header" data-breakout bg="var(--cwrublue)" p="md">
         <Group data-container c="white" justify="center" display='flex'>
-          <div className="lineUpLogo" style={{flex:1}}>
+          <div className="lineUpLogo" style={{flexShrink:0}}>
             <img src={lineupLogo} alt="LineUp Logo" height={50} />
           </div>
           <Autocomplete
-            style={{flex:5}}
+            style={{flex:1, minWidth:0}}
             placeholder="Search for a course..."
             data={['CSDS 132: Introduction to Java', 'CSDS 233: Data Structures', 'CSDS 393: Software Engineering', 'CSDS 395: Senior Project in Computer Science']}
             //rightSection={loading ? <Loader size={16} /> : null} // This will be used later for a loading circle to appear on the right edge of the search bar while searching
-            //in the final version, this and the below button will only appear when authenticated
+            // TODO: make it so search bar and upload button are only available when logged in
           />
-          <Button style={{flex:1, fontSize:14, background:'#007ab8'}}>
+          <Button style={{flexShrink:0, fontSize:14, background:'#007ab8'}}>
             Upload Syllabus
           </Button>
         </Group>
@@ -37,10 +37,13 @@ const Wrapper = ({ children }: WrapperProps) => {
       <Box component="footer" data-breakout bg="var(--cwrugray)" p="md">
         <Group data-container justify="center" display='flex'>
           <div style={{flex:1}}>
-            <ul>
+            <ul style={{listStyleType:"none"}}>
+              <li><a href='https://github.com/rhyderswen/syllabus-station'>Github</a></li>
+              <li><a href='/'>Another Related link</a></li>
               <li><a href='/'>Log Out</a></li>
-              <li><a href='/'>Related link 2</a></li>
-              <li><a href='/'>Related link 3</a></li>
+              {
+                // TODO: make it so Log Out only appears when logged in
+              }
             </ul>
           </div>
           <div style={{flex:2}}><i>*Disclaimer</i>: Syllabi and class content are subject to change at the discretion 

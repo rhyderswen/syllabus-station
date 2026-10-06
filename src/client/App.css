@@ -34,5 +34,5 @@
 }
 
 .a {
-  color: --cwrutrueblue;
+  color: var(--cwrutrueblue);
 }
