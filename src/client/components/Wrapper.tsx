@@ -12,7 +12,7 @@ const Wrapper = ({ children }: WrapperProps) => {
       strategy="grid"
       size={850}
       mih="100dvh"
-      style={{ gridTemplateRows: "auto minmax(500px, 1fr) auto" }}
+      style={{ gridTemplateRows: "auto minmax(300px, 1fr) auto" }}
     >
       <Box component="header" data-breakout bg="var(--cwrublue)" p="md">
         <Group data-container c="white" justify="center" display='flex'>
@@ -38,9 +38,9 @@ const Wrapper = ({ children }: WrapperProps) => {
         <Group data-container justify="center" display='flex'>
           <div style={{flex:1}}>
             <ul style={{listStyleType:"none"}}>
-              <li><a href='https://github.com/rhyderswen/syllabus-station'>Github</a></li>
-              <li><a href='/'>Another Related link</a></li>
-              <li><a href='/'>Log Out</a></li>
+              <li><a href='https://github.com/rhyderswen/syllabus-station' target="_blank">Github</a></li>
+              <li><a href='/' target="_blank">Another Related link</a></li>
+              <li><a href='/' target="_blank">Log Out</a></li>
               {
                 // TODO: make it so Log Out only appears when logged in
               }
