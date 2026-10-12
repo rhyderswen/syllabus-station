@@ -1,5 +1,5 @@
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Figtree", system-ui, Avenir, Helvetica, Arial, sans-serif;
 
   color: #213547;
 
@@ -51,5 +51,5 @@ button:hover {
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 4px auto var(--cwrutrueblue);
 }

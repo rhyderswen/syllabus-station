@@ -2,7 +2,8 @@ import Wrapper from "@/components/Wrapper";
 import Error from "@/pages/Error";
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router";
 import "./App.css";
-import LoggedOutHome from "./pages/LoggedOutHome";
+import Home from "@/pages/Home";
+
 
 function Layout() {
   return (
@@ -19,7 +20,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <LoggedOutHome />,
+        element: <Home />,
       },
     ],
   },

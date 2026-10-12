@@ -5,6 +5,7 @@
 
   --cwrublue: #003071;
   --cwrugray: #d3d3d3;
+  --cwrutrueblue: #007ab8;
 }
 
 .rotatable {
@@ -25,4 +26,13 @@
 
 .pointer {
   cursor: pointer;
+}
+
+.home {
+  margin: 2rem 1rem 1rem 2rem;
+  font-size: 20px;
+}
+
+.a {
+  color: var(--cwrutrueblue);
 }
