@@ -173,6 +173,11 @@ const Wrapper = ({ children }: WrapperProps) => {
               maxDate = { dayjs().add(1, 'year').startOf('year').format('YYYY-MM-DD') }
               key = { form.key('year') }
               { ...form.getInputProps('year') }
+              styles={{
+                input: {
+                  fontWeight: 400,
+                },
+              }}
             />
           </Group>
 
@@ -258,7 +263,7 @@ const Wrapper = ({ children }: WrapperProps) => {
             )}
           </Box>
 
-          <Group justify="flex-end" mt="md" style={{ fontSize: 14, background: "var(--cwrutrueblue)" }}>
+          <Group justify="flex-end" mt="md" fz={ 14 } >
             <Button type="submit">Submit</Button>
           </Group>
         </Box>
