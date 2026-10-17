@@ -19,10 +19,12 @@ app.use((req, res, next) => {
   const token = req.cookies.token;
   if (token) {
     try {
-      const user = jwt.verify(token, process.env.JWT_SECRET!);
-      req.user = user as any;
+      const user = jwt.verify(token, process.env.JWT_SECRET!) as any;
+      req.user = user;
     } catch (err) {
-      console.error("JWT verification failed:", err);
+      // Access token might be expired, clear it so frontend knows it needs refresh
+      res.clearCookie('token');
+      console.log("JWT token expired or invalid");
     }
   }
   next();
