@@ -1,8 +1,9 @@
 import Wrapper from "@/components/Wrapper";
 import Error from "@/pages/Error";
+import Home from "@/pages/Home";
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router";
 import "./App.css";
-import LoggedOutHome from "./pages/LoggedOutHome";
+import CoursePage from "./pages/CoursePage";
 
 function Layout() {
   return (
@@ -19,7 +20,21 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <LoggedOutHome />,
+        element: <Home />,
+      },
+      {
+        path: "/course",
+        children: [
+          {
+            index: true, // matches exactly /course
+            element: <CoursePage />,
+            // element: <Navigate to="/" replace />,
+          },
+          {
+            path: ":courseCode", // matches /course/:courseCode
+            element: <CoursePage />,
+          },
+        ],
       },
     ],
   },

@@ -20,6 +20,9 @@ importers:
       '@prisma/orm-postgres':
         specifier: 8.0.0-rc.8
         version: 8.0.0-rc.8(@prisma/cli-engine@0.3.0(@prisma/management-api-sdk@1.82.0))(typanion@3.14.0)(typescript@5.9.3)(vite@8.3.3(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12))
+      '@phosphor-icons/react':
+        specifier: ^2.1.10
+        version: 2.1.10(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@tanstack/react-query':
         specifier: ^5.103.2
         version: 5.104.1(react@19.2.8)
@@ -438,6 +441,13 @@ packages:
         optional: true
       vite:
         optional: true
+
+  '@phosphor-icons/react@2.1.10':
+    resolution: {integrity: sha512-vt8Tvq8GLjheAZZYa+YG/pW7HDbov8El/MANW8pOAz4eGxrwhnbfrQZq0Cp4q8zBEu8NIhHdnr+r8thnfRSNYA==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: '>= 16.8'
+      react-dom: '>= 16.8'
 
   '@remix-run/route-pattern@0.22.1':
     resolution: {integrity: sha512-czdGJWh09Lapvcqt7Vb09KlrU2PhRJ8xQaI+AItTuD9aDJ5MAgxnS38lnys6Ll+6RJEqPiaUqTwIQhVLwFvv+w==}
@@ -1893,6 +1903,17 @@ snapshots:
       react: 19.2.8
 
   '@noble/hashes@2.4.0': {}
+  '@napi-rs/lzma-linux-x64-gnu@1.5.1':
+    optional: true
+
+  '@phosphor-icons/react@2.1.10(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+    dependencies:
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
+
+  '@remix-run/route-pattern@0.22.1': {}
+
+  '@rolldown/pluginutils@1.0.0-beta.27': {}
 
   '@oxc-project/types@0.152.0': {}
 
