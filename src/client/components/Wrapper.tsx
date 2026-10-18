@@ -1,12 +1,11 @@
 import lineupLogo from "@/assets/lineup-full.png"; // placeholder to figure out spacing
-import { Autocomplete, Box, Button, Container, Group, Modal, Select, TextInput, Paper, Text } from "@mantine/core";
+import { Autocomplete, Box, Button, Container, Group, Modal, Select, TextInput, List } from "@mantine/core";
 import { useDisclosure } from '@mantine/hooks';
 import { YearPickerInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { Link } from "react-router";
 import dayjs from 'dayjs';
-import { useDropzone } from "react-dropzone";
-import { IconUpload, IconFile, IconX } from '@tabler/icons-react';
+import SyllabusDropzone from "./SyllabusDropzone"
 
 export interface WrapperProps {
   children: React.ReactNode;
@@ -58,41 +57,9 @@ const Wrapper = ({ children }: WrapperProps) => {
     console.log('Form values:', values);
     console.log('File object:', values.file);
     
-    form.reset();
     close();
+    form.reset();
   };
-
-  const {
-    getRootProps,
-    getInputProps,
-    isDragActive,
-  } = useDropzone({
-    accept: {
-      'application/pdf': ['.pdf'],
-    },
-    maxFiles: 1,
-    maxSize: 10 * 1024 * 1024, // 10 MB, this can be changed if we think it's too small/big
-    multiple: false,
-
-    onDrop: (acceptedFiles) => {
-      if (acceptedFiles.length > 0) {
-        form.setFieldValue('file', acceptedFiles[0]);
-        form.clearFieldError('file');
-      }
-    },
-
-    onDropRejected: (rejections) => {
-      const error = rejections[0]?.errors[0];
-
-      if (error?.code === 'file-too-large') {
-        form.setFieldError('file', 'The file must be 10 MB or smaller.');
-      } else if (error?.code === 'file-invalid-type') {
-        form.setFieldError('file', 'Please upload a PDF file.');
-      } else {
-        form.setFieldError('file', 'Please select a valid file.');
-      }
-    },
-  });
 
   return (
     <>
@@ -154,8 +121,11 @@ const Wrapper = ({ children }: WrapperProps) => {
               label = "Year"
               placeholder = "Select a Year"
               required
-              defaultValue = { dayjs().startOf('year').format('YYYY-MM-DD') }
               presets = {[
+                { 
+                  value: dayjs().subtract(1, 'year').startOf('year').format('YYYY-MM-DD'), 
+                  label: 'Last year' 
+                },
                 { 
                   value: dayjs().startOf('year').format('YYYY-MM-DD'), 
                   label: 'This year' 
@@ -163,10 +133,6 @@ const Wrapper = ({ children }: WrapperProps) => {
                 { 
                   value: dayjs().add(1, 'year').startOf('year').format('YYYY-MM-DD'), 
                   label: 'Next year' 
-                },
-                { 
-                  value: dayjs().subtract(1, 'year').startOf('year').format('YYYY-MM-DD'), 
-                  label: 'Last year' 
                 },
               ]} 
               minDate = { new Date(1826, 1) }
@@ -181,87 +147,13 @@ const Wrapper = ({ children }: WrapperProps) => {
             />
           </Group>
 
-          <Box mt="md">
-            <Text size="sm" fw={500} mb={6}>
-              Syllabus File <Text span c="red">*</Text>
-            </Text>
-
-            {form.values.file ? (
-              <Paper
-                withBorder
-                p="md"
-                radius="md"
-              >
-                <Group justify="space-between" wrap="nowrap">
-                  <Group gap="sm" wrap="nowrap">
-                    <IconFile size={24} />
-
-                    <Box>
-                      <Text size="sm" fw={500} lineClamp={1}>
-                        {form.values.file.name}
-                      </Text>
-
-                      <Text size="xs" c="dimmed">
-                        {(form.values.file.size / 1024 / 1024).toFixed(2)} MB
-                      </Text>
-                    </Box>
-                  </Group>
-
-                  <Button
-                    variant="subtle"
-                    color="red"
-                    size="xs"
-                    aria-label="Remove selected file"
-                    onClick={() => {
-                      form.setFieldValue('file', null);
-                      form.clearFieldError('file');
-                    }}
-                  >
-                    <IconX size={16} />
-                  </Button>
-                </Group>
-              </Paper>
-            ) : (
-              <Paper
-                {...getRootProps()}
-                withBorder
-                p="xl"
-                radius="md"
-                ta="center"
-                style={{
-                  borderStyle: 'dashed',
-                  cursor: 'pointer',
-                  backgroundColor: isDragActive
-                    ? 'var(--mantine-color-blue-light)'
-                    : undefined,
-                }}
-              >
-                <input {...getInputProps()} />
-
-                <IconUpload
-                  size={50}
-                  stroke={2}
-                  style={{ marginBottom: 8 }}
-                />
-
-                <Text size="sm" fw={500}>
-                  {isDragActive
-                    ? 'Drop your syllabus here'
-                    : 'Drag and drop your syllabus here, or click to browse'}
-                </Text>
-
-                <Text size="xs" c="dimmed" mt={6}>
-                  PDF files only, up to 10 MB
-                </Text>
-              </Paper>
-            )}
-
-            {form.errors.file && (
-              <Text c="red" size="xs" mt={5}>
-                {form.errors.file}
-              </Text>
-            )}
-          </Box>
+          <SyllabusDropzone
+            file={form.values.file}
+            error={form.errors.file}
+            setFile={(file) => form.setFieldValue('file', file)}
+            clearError={() => form.clearFieldError('file')}
+            setError={(error) => form.setFieldError('file', error)}
+          />
 
           <Group justify="flex-end" mt="md" fz={ 14 } >
             <Button type="submit">Submit</Button>
@@ -283,7 +175,8 @@ const Wrapper = ({ children }: WrapperProps) => {
               </Link>
             </div>
             <Autocomplete
-              style={{ flex: 1, minWidth: 0 }}
+              flex={1}
+              miw={0}
               placeholder="Search for a course..."
               data={[
                 "CSDS 132: Introduction to Java",
@@ -294,7 +187,7 @@ const Wrapper = ({ children }: WrapperProps) => {
               //rightSection={loading ? <Loader size={16} /> : null} // This will be used later for a loading circle to appear on the right edge of the search bar while searching
               // TODO: make it so search bar and upload button are only available when logged in
             />
-            <Button style={{ flexShrink: 0, fontSize: 14, background: "var(--cwrutrueblue)" }} onClick = { open }>
+            <Button fz={14} bg="var(--cwrutrueblue)" style={{ flexShrink: 0 }} onClick = { open }>
               Upload Syllabus
             </Button>
           </Group>
@@ -304,33 +197,33 @@ const Wrapper = ({ children }: WrapperProps) => {
 
         <Box component="footer" data-breakout bg="var(--cwrugray)" p="md">
           <Group data-container justify="center" display="flex">
-            <div style={{ flex: 1 }}>
-              <ul style={{ listStyleType: "none" }}>
-                <li>
-                  <a href="https://github.com/rhyderswen/syllabus-station" target="_blank">
+            <Box flex={1}>
+              <List listStyleType="none">
+                <List.Item>
+                  <Link to="https://github.com/rhyderswen/syllabus-station" target="_blank">
                     Github
-                  </a>
-                </li>
-                <li>
-                  <a href="/" target="_blank">
+                  </Link>
+                </List.Item>
+                <List.Item>
+                  <Link to="/" target="_blank">
                     Another Related link
-                  </a>
-                </li>
-                <li>
-                  <a href="/" target="_blank">
+                  </Link>
+                </List.Item>
+                <List.Item>
+                  <Link to="/" target="_blank">
                     Log Out
-                  </a>
-                </li>
+                  </Link>
+                </List.Item>
                 {
                   // TODO: make it so Log Out only appears when logged in
                 }
-              </ul>
-            </div>
-            <div style={{ flex: 2 }}>
+              </List>
+            </Box>
+            <Box flex={2}>
               <i>*Disclaimer</i>: Syllabi and class content are subject to change at the discretion of
               the instructor. Do not assume information from a syllabus linked here is 100% accurate
               to a course's content.
-            </div>
+            </Box>
           </Group>
         </Box>
       </Container>
