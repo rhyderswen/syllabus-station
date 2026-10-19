@@ -59,7 +59,7 @@ router.post("/syllabus/upload", async(req, res) => {
                     courseID: req.syllabi.courseID, //This might need to be changed; we'll need some way to get the courseID to match the course name that already exists in the table
                     fileID: req.syllabi.fileID,
                     uploadDate: new Date(Date.now()),
-                    uploader: req.syllabi.uploader
+                    uploader: req.user.netId
                 }
             })
         }
