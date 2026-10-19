@@ -14,12 +14,14 @@ export interface WrapperProps {
 const Wrapper = ({ children }: WrapperProps) => {
   const [opened, { open, close }] = useDisclosure(false);
 
+  const currentSemester = dayjs().month() < 5 ? 'Spring' : (dayjs().month() < 7 ? 'Summer' : 'Fall');
+
   const form = useForm({
     mode: 'uncontrolled',
     initialValues: {
       course: '',
       instructor: '',
-      sem: '',
+      sem: currentSemester,
       year: dayjs().startOf('year').format('YYYY-MM-DD'),
       file: null as File | null,
     },
@@ -187,7 +189,7 @@ const Wrapper = ({ children }: WrapperProps) => {
               //rightSection={loading ? <Loader size={16} /> : null} // This will be used later for a loading circle to appear on the right edge of the search bar while searching
               // TODO: make it so search bar and upload button are only available when logged in
             />
-            <Button fz={14} bg="var(--cwrutrueblue)" style={{ flexShrink: 0 }} onClick = { open }>
+            <Button fz={14} bg="var(--cwrutrueblue)" flex="0 0 auto" onClick = { open }>
               Upload Syllabus
             </Button>
           </Group>
