@@ -17,10 +17,8 @@ export default defineConfig({
         }
     ), react()],
     server: {
-        https: {
-        	hmr: {
-        	  protocol: "wss",
-        	},
+        ws: {
+            protocol: "wss"
         },
     },
     resolve: {
