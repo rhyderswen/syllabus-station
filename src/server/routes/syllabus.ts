@@ -21,13 +21,19 @@ const upload = multer({
 });
 
 router.get("/get", async (req, res) => {
-    if (!req.user)
-        return res.status(401).send("Unauthorized.");
+    //if (!req.user)
+    //    return res.status(401).send("Unauthorized.");
+
+    const syllabusId = req.query.id as string;
+
+    if (!syllabusId) {
+        return res.status(400).send("Missing syllabus ID.");
+    }
 
     try {
         const syllabus = await prismaGlobal.syllabi.findUnique({
             where: {
-                id: req.body.syllabus.id
+                id: syllabusId
             }
         });
 
@@ -37,7 +43,7 @@ router.get("/get", async (req, res) => {
 
             const command = new GetObjectCommand({
                 Bucket: "syllabus-station",
-                Key: `${syllabus.id}.pdf`
+                Key: `${syllabus.fileID}.pdf`
             });
 
             const presigned = await getSignedUrl(S3Global, command, {expiresIn: 3600});
@@ -45,6 +51,7 @@ router.get("/get", async (req, res) => {
             res.send({syllabus: syllabus, url: presigned});
         }
     } catch (error) {
+        console.error(error);
         res.status(500).send("Server error.");
     }
 });
@@ -53,20 +60,35 @@ router.get("/list", async (req, res) => {
     if (!req.user)
         return res.status(401).send("Unauthorized.");
 
+    const courseID = req.query.courseID as string;
+
+    if (!courseID) {
+        return res.status(400).send("Missing course ID.");
+    }
+
     try {
-        const syllabi = await prismaGlobal.syllabi.groupBy({
-            by: ['semester'],
+        const syllabi = await prismaGlobal.syllabi.findMany({
             where: {
-                courseID: req.body.syllabus.courseID
+                courseID: courseID
             }
         });
+
+        const groupedBySemester = syllabi.reduce((acc, syllabus) => {
+            const semester = syllabus.semester;
+            if (!acc[semester]) {
+                acc[semester] = [];
+            }
+            acc[semester].push(syllabus);
+            return acc;
+        }, {} as {[semester: string]: any[]});
 
         if (!syllabi) {
             return res.status(404).send("Syllabus not found.");
         } else {
-            res.send(syllabi);
+            res.send(groupedBySemester);
         }
     } catch (error) {
+        console.error(error);
         res.status(500).send("Server error.");
     }
 });
@@ -79,7 +101,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
         return res.status(400).send("Invalid request.");
 
     // @ts-ignore
-    const {professor, semester, courseID} = req.fields.syllabus;
+    const {professor, semester, courseID} = req.body.syllabus ?? {};
 
     if (!professor || !semester || !courseID) {
         return res.status(400).send("Invalid request.");
@@ -99,16 +121,26 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     try {
         await S3Global.send(command);
 
-        await prismaGlobal.syllabi.create({
+        const created = await prismaGlobal.syllabi.create({
             data: {
                 professor: professor,
                 semester: semester,
-                courseID: courseID,
                 fileID: fileID,
                 uploadDate: new Date(Date.now()),
-                uploader: (req.user as any).netID
+                course: {
+                    connect: {
+                        id: courseID
+                    }
+                },
+                user: {
+                    connect: {
+                        id: (req.user as any).netId
+                    }
+                },
             }
         })
+
+        res.status(200).send({id: created.id});
 
     } catch (error) {
         console.error(error);
