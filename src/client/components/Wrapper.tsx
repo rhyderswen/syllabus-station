@@ -1,4 +1,4 @@
-import lineupLogo from "@/assets/lineup-full.png"; // placeholder to figure out spacing
+import SyllabusStationLogo from "@/assets/SyllabusStation-full.png"; // placeholder to figure out spacing
 import { Autocomplete, Box, Button, Container, Group, Modal, Select, TextInput, List } from "@mantine/core";
 import { useDisclosure } from '@mantine/hooks';
 import { YearPickerInput } from '@mantine/dates';
@@ -173,7 +173,7 @@ const Wrapper = ({ children }: WrapperProps) => {
           <Group data-container c="white" justify="center" display="flex">
             <div className="lineUpLogo" style={{ flexShrink: 0 }}>
               <Link to="/">
-                <img src={lineupLogo} alt="LineUp Logo" height={50} />
+                <img src={SyllabusStationLogo} alt="Syllabus Station Logo" height={60} />
               </Link>
             </div>
             <Autocomplete
