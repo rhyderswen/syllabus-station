@@ -25,7 +25,7 @@ app.use((req, res, next) => {
       req.user = user;
     } catch (err) {
       // Access token might be expired, clear it so frontend knows it needs refresh
-      res.clearCookie('token');
+      res.clearCookie("token");
       console.log("JWT token expired or invalid");
     }
   }
@@ -33,7 +33,7 @@ app.use((req, res, next) => {
 });
 
 app.use("/", authRouter);
-app.use('/syllabus', syllabusRouter);
+app.use("/syllabus", syllabusRouter);
 
 app.get("/hello", (_, res) => {
   res.send("Hello Vite + React + TypeScript!");
@@ -47,7 +47,9 @@ try {
     cert: fs.readFileSync(path.resolve("./certs/localhost.pem")),
   };
 } catch (err) {
-  console.warn("⚠️ Certificates not found yet. If this is your first run, restart the server once Vite generates them.");
+  console.warn(
+    "⚠️ Certificates not found yet. If this is your first run, restart the server once Vite generates them.",
+  );
 }
 
 const server = https.createServer(sslOptions, app);
@@ -57,4 +59,3 @@ server.listen(PORT, () => {
 });
 
 ViteExpress.bind(app, server);
-

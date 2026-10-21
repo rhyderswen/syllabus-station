@@ -1,7 +1,7 @@
-import { defineContract } from '@prisma/orm-postgres/contract-builder';
+import { defineContract } from "@prisma/orm-postgres/contract-builder";
 
 export const contract = defineContract({}, ({ field, model, rel }) => {
-  const User = model('User', {
+  const User = model("User", {
     fields: {
       id: field.id.text(),
       isAdmin: field.boolean(),
@@ -9,15 +9,15 @@ export const contract = defineContract({}, ({ field, model, rel }) => {
     },
   });
 
-  const Course = model('Course', {
-    fields:{
+  const Course = model("Course", {
+    fields: {
       id: field.id.uuidv7String(),
       title: field.text(),
       catalogCode: field.text(),
-    }
+    },
   });
 
-  const Syllabi = model('Syllabi', {
+  const Syllabi = model("Syllabi", {
     fields: {
       id: field.id.uuidv7String(),
       professor: field.text(),
@@ -30,7 +30,6 @@ export const contract = defineContract({}, ({ field, model, rel }) => {
   });
 
   return {
-    models: {
-    },
+    models: {},
   };
 });

@@ -19,9 +19,7 @@
       "#/*": ["./src/server/*"],
       "~/*": ["./src/shared/*"]
     },
-    "types": [
-      "node"
-    ],
+    "types": ["node"]
   },
   "include": ["src"]
 }
