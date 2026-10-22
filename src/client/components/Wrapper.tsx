@@ -52,7 +52,17 @@ const Wrapper = ({ children }: WrapperProps) => {
               //rightSection={loading ? <Loader size={16} /> : null} // This will be used later for a loading circle to appear on the right edge of the search bar while searching
               // TODO: make it so search bar and upload button are only available when logged in
             />
-            <Button fz={14} bg="var(--cwrutrueblue)" flex="0 0 auto" onClick = { open }>
+            <Button 
+              fz={14} 
+              bg="var(--cwrutrueblue)" 
+              flex="0 0 auto" 
+              onClick={() => {
+                if (isAuthenticated) {
+                  open();
+                } else {
+                  window.open("/login", "_blank");
+                }
+              }}>
               Upload Syllabus
             </Button>
           </Group>
