@@ -38,6 +38,26 @@ async function main() {
         }
     })
 
+    const calc1 = await prisma.course.upsert({
+        where: {id: "fa4db26a-be1b-4738-93f0-79b119ae2f33"},
+        update: {},
+        create: {
+            id: "fa4db26a-be1b-4738-93f0-79b119ae2f33",
+            title: "Calculus for Science and Engineering I",
+            catalogCode: "MATH121"
+        }
+    })
+
+    const seniorProject = await prisma.course.upsert({
+        where: {id: "4c255eb2-f434-47f5-a59c-16e45c098a56"},
+        update: {},
+        create: {
+            id: "4c255eb2-f434-47f5-a59c-16e45c098a56",
+            title: "Senior Project in Computer Science",
+            catalogCode: "CSDS395"
+        }
+    })
+
     const haroldFallSyllabus = await prisma.syllabi.upsert({
         where: {id: "945cebfd-bd70-4268-8398-f0a227351de7"},
         update: {},

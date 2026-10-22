@@ -19,7 +19,7 @@ const Wrapper = ({ children }: WrapperProps) => {
   const form = useForm({
     mode: 'uncontrolled',
     initialValues: {
-      course: '',
+      courseID: '',
       instructor: '',
       sem: currentSemester,
       year: dayjs().startOf('year').format('YYYY-MM-DD'),
@@ -27,7 +27,7 @@ const Wrapper = ({ children }: WrapperProps) => {
     },
 
     validate: {
-      course: (value) => value ? null : 'Select a course',
+      courseID: (value) => value ? null : 'Select a course',
       instructor: (value) => value.trim() ? null : 'Enter an instructor',
       sem: (value) => value ? null : 'Select a semester',
       file: (value) => value ? null : 'Upload a syllabus',
@@ -38,29 +38,40 @@ const Wrapper = ({ children }: WrapperProps) => {
     if (!values.file) {
       return;
     }
-    /*
-    const data = new FormData();
-
-    data.append('course', values.course);
-    data.append('instructor', values.instructor);
-    data.append('semester', values.sem);
-    data.append('year', values.year);
-    data.append('file', values.file);
-
-    // TODO: rename syllabus file here?
-    // TODO: API call here
-
-    if (!response.ok) {
-      throw new Error('Failed to upload syllabus');
-    }
-    */
-
+    
     // Debug, verify input matches these logs
     console.log('Form values:', values);
     console.log('File object:', values.file);
-    
-    close();
-    form.reset();
+
+    const data = new FormData();
+
+    const year = dayjs(values.year).format('YYYY');
+    const semester = `${values.sem} ${year}`;
+
+    data.append('file', values.file);
+    data.append('professor', values.instructor.trim());
+    data.append('semester', semester);
+    data.append('courseID', values.courseID);
+
+    try {
+      const response = await fetch('/syllabus/upload', {
+        method: 'POST',
+        body: data,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || 'Failed to upload syllabus');
+      }
+
+      const result: { id: string } = await response.json();
+
+      close();
+      form.reset();
+    } catch (error) {
+      console.error('Error uploading syllabus:', error);
+    } 
   };
 
   return (
@@ -80,17 +91,16 @@ const Wrapper = ({ children }: WrapperProps) => {
           <Select
             label = "Course Title"
             placeholder = "Select a Course"
-            data = {[
-              "CSDS 132: Introduction to Java",
-              "CSDS 233: Data Structures",
-              "CSDS 393: Software Engineering",
-              "CSDS 395: Senior Project in Computer Science",
+            data={[
+              { value: 'f0bd28a7-ffb9-4015-a62f-9523b723e1f5', label: "CSDS 132: Introduction to Java" },
+              { value: '4c255eb2-f434-47f5-a59c-16e45c098a56', label: "CSDS 395: Senior Project in Computer Science" },
+              { value: 'fa4db26a-be1b-4738-93f0-79b119ae2f33', label: "MATH 121: Calculus for Science and Engineering I"}
             ]}
             searchable
             required
             openOnFocus = { false }
-            key = { form.key('course') }
-            { ...form.getInputProps('course') }
+            key = { form.key('courseID') }
+            { ...form.getInputProps('courseID') }
           />
 
           {
