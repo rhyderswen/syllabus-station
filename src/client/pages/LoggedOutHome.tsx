@@ -1,4 +1,5 @@
 import { Container, Title, UnstyledButton } from "@mantine/core";
+import { Link } from "react-router";
 
 const LoggedOutHome = () => {
   return (
@@ -11,13 +12,9 @@ const LoggedOutHome = () => {
         // but until we have a proper logo/color scheme figured out, it's fine
       }
       In order to view and add syllabi, you must{" "}
-      <UnstyledButton
-        c="var(--cwrutrueblue)"
-        fz="inherit"
-        onClick={() => console.log("log in would happen here!")}
-      >
+      <Link to="/login" target="_blank">
         sign in
-      </UnstyledButton>{" "}
+      </Link>{" "}
       with your CWRU account.
     </Container>
   );

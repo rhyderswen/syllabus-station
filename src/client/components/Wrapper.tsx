@@ -3,6 +3,7 @@ import { Autocomplete, Box, Button, Container, Group, Modal, List } from "@manti
 import { useDisclosure } from '@mantine/hooks';
 import { Link } from "react-router";
 import SyllabusUpload from "./SyllabusUpload"
+import { useAuth } from "../contexts/AuthContext";
 
 export interface WrapperProps {
   children: React.ReactNode;
@@ -10,6 +11,7 @@ export interface WrapperProps {
 
 const Wrapper = ({ children }: WrapperProps) => {
   const [opened, { open, close }] = useDisclosure(false);
+  const { isAuthenticated, status } = useAuth();
 
   return (
     <>
@@ -72,14 +74,13 @@ const Wrapper = ({ children }: WrapperProps) => {
                     Another Related link
                   </Link>
                 </List.Item>
-                <List.Item>
-                  <Link to="/" target="_blank">
-                    Log Out
-                  </Link>
-                </List.Item>
-                {
-                  // TODO: make it so Log Out only appears when logged in
-                }
+                {isAuthenticated ?
+                  <List.Item>
+                    <Link to="/logout" target="_blank">
+                      Log Out
+                    </Link>
+                  </List.Item>
+                  : <></>}
               </List>
             </Box>
             <Box flex={2}>

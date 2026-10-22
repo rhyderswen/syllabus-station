@@ -1,16 +1,19 @@
 import LoggedInHome from "./LoggedInHome";
 import LoggedOutHome from "./LoggedOutHome";
+import { Container } from "@mantine/core";
+import { useAuth } from "../contexts/AuthContext";
 
 const Home = () => {
-  //const { isAuthenticated, isLoading, error } = useAuth0();
-  const isLoggedIn = false;
+  const { isAuthenticated, status } = useAuth();
 
-  // If the user is authenticated, show the logged in homepage, otherwise show the logged out homepage
-  // Don't show either if the authentication status is still loading or an error occurs
-  //return <>{(!isLoading || error) && <>{isAuthenticated ? <LoggedInHome /> : <LoggedOutHome />}</>}</>;
+  if (status === "loading") {
+    return <Container className="home" p="xl" ta="center">Checking authentication...</Container>;
+  }
+  // TODO: Loader circle for this ^
+
   return (
     <>
-      {isLoggedIn ?
+      {isAuthenticated ?
         <LoggedInHome />
       : <LoggedOutHome />}
     </>
