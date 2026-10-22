@@ -6,6 +6,11 @@ import { SemesterData } from "~/types";
 function CourseSemester({ semester, syllabi }: SemesterData) {
   const [expanded, { toggle }] = useDisclosure(true);
 
+  function formatDate(isoDate: string) {
+    const date = new Date(isoDate);
+    return date.toLocaleDateString(undefined, { dateStyle: "short" });
+  }
+
   return (
     <Paper shadow="xs" id={semester}>
       <Box p="md" onClick={toggle} style={{ cursor: "pointer" }}>
@@ -23,9 +28,14 @@ function CourseSemester({ semester, syllabi }: SemesterData) {
             {syllabi.map((syllabus, index) => (
               <Table.Tr key={index}>
                 <Table.Td>
-                  <a href="#">{syllabus.filename}</a>, taught by {syllabus.professor}
+                  <a href={syllabus.pdfLink} target="_blank" rel="noopener noreferrer">
+                    {syllabus.filename}
+                  </a>
+                  , taught by {syllabus.professor}
                 </Table.Td>
-                <Table.Td ta="right">Uploaded {syllabus.uploadDate}</Table.Td>
+                <Table.Td ta="right" w="fit-content">
+                  Uploaded {formatDate(syllabus.uploadDate)}
+                </Table.Td>
               </Table.Tr>
             ))}
           </Table.Tbody>

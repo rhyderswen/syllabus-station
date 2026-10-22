@@ -6,6 +6,7 @@ import {prismaGlobal} from "~/sharedDb";
 import {S3Global} from "~/sharedS3";
 import {randomUUID} from "crypto";
 import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
+import {CourseData} from "~/types";
 
 let router = express.Router();
 
@@ -60,6 +61,8 @@ router.get("/list", async (req, res) => {
     if (!req.user)
         return res.status(401).send("Unauthorized.");
 
+    console.log("hi")
+
     const courseID = req.query.courseID as string;
 
     if (!courseID) {
@@ -72,7 +75,24 @@ router.get("/list", async (req, res) => {
                 courseID: courseID
             }
         });
-
+        
+        const courseInfo = await prismaGlobal.course.findUnique({
+            where: {
+                id: courseID
+            }
+        });
+        
+        if (!courseInfo) {
+            return res.status(404).send("Course not found.");
+        }
+        
+        let courseData: CourseData = {
+            name: courseInfo.title,
+            code: courseInfo.catalogCode,
+            semesters: []
+        }
+        
+        
         const groupedBySemester = syllabi.reduce((acc, syllabus) => {
             const semester = syllabus.semester;
             if (!acc[semester]) {
@@ -82,10 +102,42 @@ router.get("/list", async (req, res) => {
             return acc;
         }, {} as {[semester: string]: any[]});
 
+        for (const [semester, syllabi] of Object.entries(groupedBySemester)) {
+            for (const syllabus of syllabi) {
+
+                const command = new GetObjectCommand({
+                    Bucket: "syllabus-station",
+                    Key: `${syllabus.fileID}.pdf`
+                });
+
+                const presigned = await getSignedUrl(S3Global, command, {expiresIn: 3600});
+
+                let semesterIndex = courseData.semesters.findIndex(s => s.semester === semester);
+                if (semesterIndex == -1) {
+                    courseData.semesters.push({
+                        semester: semester,
+                        syllabi: [{
+                            filename: `${syllabus.fileID}`,
+                            pdfLink: presigned,
+                            professor: syllabus.professor,
+                            uploadDate: syllabus.uploadDate
+                        }]
+                    })
+                } else {
+                    courseData.semesters[semesterIndex].syllabi.push({
+                        filename: `${syllabus.fileID}`,
+                        pdfLink: presigned,
+                        professor: syllabus.professor,
+                        uploadDate: syllabus.uploadDate
+                    })
+                }
+            }
+        }
+
         if (!syllabi) {
             return res.status(404).send("Syllabus not found.");
         } else {
-            res.send(groupedBySemester);
+            res.send(courseData);
         }
     } catch (error) {
         console.error(error);
