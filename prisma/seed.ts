@@ -63,7 +63,7 @@ async function main() {
     create: {
       id: "945cebfd-bd70-4268-8398-f0a227351de7",
       professor: "Harold Connamacher",
-      semester: "Fall 2024",
+      semester: "Fall 2025",
       course: {
         connect: {
           id: "f0bd28a7-ffb9-4015-a62f-9523b723e1f5",
@@ -85,7 +85,29 @@ async function main() {
     create: {
       id: "3057b6bd-8fe8-4939-a429-846caf6cbb22",
       professor: "Orhan Ozguner",
-      semester: "Spring 2024",
+      semester: "Spring 2026",
+      course: {
+        connect: {
+          id: "f0bd28a7-ffb9-4015-a62f-9523b723e1f5",
+        },
+      },
+      fileID: "3057b6bd-8fe8-4939-a429-846caf6cbb22",
+      uploadDate: new Date(Date.now()),
+      user: {
+        connect: {
+          id: "hsc",
+        },
+      },
+    },
+  });
+
+  const kruppSemester2 = await prisma.syllabi.upsert({
+    where: { id: "96e89a81-a4ba-460f-8c2e-64962752db80" },
+    update: {},
+    create: {
+      id: "96e89a81-a4ba-460f-8c2e-64962752db80",
+      professor: "Brian Krupp",
+      semester: "Spring 2026",
       course: {
         connect: {
           id: "f0bd28a7-ffb9-4015-a62f-9523b723e1f5",
