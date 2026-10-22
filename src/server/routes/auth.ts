@@ -72,6 +72,13 @@ router.post('/login/password', passport.authenticate('local', {
     failureRedirect: '/login'
 }));
 
+router.get('/checkAuth', (req, res) => {
+    if (!req.user) {
+        return res.status(401).send("Unauthorized");
+    }
+    res.status(200).send("Authenticated");
+})
+
 router.get('/logout', (req, res) => {
     res.clearCookie('token');
     res.clearCookie('refreshToken');
