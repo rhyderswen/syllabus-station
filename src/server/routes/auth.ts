@@ -31,7 +31,9 @@ router.get("/login", passport.authenticate('cas', {session: false}), async (req,
         return res.status(401).send("Authentication failed");
     }
 
-    if (!await prismaGlobal.user.findUnique({where: {id: (req.user as any).netId}})) {
+    const user = await prismaGlobal.user.findUnique({where: {id: (req.user as any).netId}});
+
+    if (!user) {
         await prismaGlobal.user.create({
             data: {
                 id: (req.user as any).netId as string,
@@ -39,6 +41,12 @@ router.get("/login", passport.authenticate('cas', {session: false}), async (req,
                 isBanned: false,
             }
         });
+    }
+
+    if (user!.isBanned) {
+        res.clearCookie('token');
+        res.clearCookie('refreshToken');
+        return res.status(403).send("You are the weakest link, goodbye.")
     }
 
     const userPayload = {netId: (req.user as any).netId};
@@ -93,6 +101,12 @@ router.get('/refresh', async (req, res) => {
 
         if (!dbToken) {
             return res.status(403).send("Invalid or expired refresh token");
+        }
+
+        if (dbToken.user.isBanned) {
+            res.clearCookie('token');
+            res.clearCookie('refreshToken');
+            return res.status(403).send("You are the weakest link, goodbye.")
         }
 
         if (dbToken.expiresAt.getTime() < Date.now()) {
