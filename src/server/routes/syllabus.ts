@@ -101,7 +101,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
         return res.status(400).send("Invalid request.");
 
     // @ts-ignore
-    const {professor, semester, courseID} = req.body.syllabus ?? {};
+    const {professor, semester, courseID} = req.body;
 
     if (!professor || !semester || !courseID) {
         return res.status(400).send("Invalid request.");
