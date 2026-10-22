@@ -64,7 +64,7 @@ router.get("/login", passport.authenticate('cas', {session: false}), async (req,
         }
     })
 
-    res.send("Logged in as: " + (req.user as any).netId + "");
+    res.redirect('/');
 });
 
 router.post('/login/password', passport.authenticate('local', {
