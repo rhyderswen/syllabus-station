@@ -6,19 +6,29 @@ import {prismaGlobal} from "~/sharedDb";
 let router = express.Router();
 
 router.get("/courselist", async (req, res) => {
-    const courseIDSearch = req.query.courseID as string;
+    const courseSearch = req.query.courseID as string;
 
-    if(!courseIDSearch) {
+    if(!courseSearch) {
         return res.status(400).send("Missing Course ID.");
     }
 
     try{
         const courses = await prismaGlobal.course.findMany({
             where: {
-                catalogCode: {
-                    contains: courseIDSearch,
-                    mode: "insensitive"
-                },
+                OR: [
+                    {
+                        catalogCode: {
+                            contains: courseSearch,
+                            mode: "insensitive"
+                        }
+                    },
+                    {
+                        title: {
+                            contains: courseSearch,
+                            mode: "insensitive"
+                       },
+                    },
+                ],
             },
         });
 
@@ -26,7 +36,7 @@ router.get("/courselist", async (req, res) => {
             return res.status(404).send("No courses found.");
         }
 
-        const sortedCourses = fuzzysort.go(courseIDSearch, courses, {key: "catalogCode"});
+        const sortedCourses = fuzzysort.go(courseSearch, courses, {keys: ["catalogCode", "title"]});
 
         res.send({courses: sortedCourses});
     }
