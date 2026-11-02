@@ -1,8 +1,8 @@
 import SyllabusStationLogo from "@/assets/SyllabusStation-full.png"; // placeholder to figure out spacing
 import { Autocomplete, Box, Button, Container, Group, Modal, List } from "@mantine/core";
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure } from "@mantine/hooks";
 import { Link } from "react-router";
-import SyllabusUpload from "./SyllabusUpload"
+import SyllabusUpload from "./SyllabusUpload";
 import { useAuth } from "../contexts/AuthContext";
 
 export interface WrapperProps {
@@ -15,12 +15,12 @@ const Wrapper = ({ children }: WrapperProps) => {
 
   return (
     <>
-      <Modal 
-        opened={ opened } 
-        onClose={ close } 
-        withCloseButton={ true } 
-        title="Upload Syllabus" 
-        centered      
+      <Modal
+        opened={opened}
+        onClose={close}
+        withCloseButton={true}
+        title="Upload Syllabus"
+        centered
         size="60vw"
       >
         <SyllabusUpload onClose={close} />
@@ -52,17 +52,18 @@ const Wrapper = ({ children }: WrapperProps) => {
               //rightSection={loading ? <Loader size={16} /> : null} // This will be used later for a loading circle to appear on the right edge of the search bar while searching
               // TODO: make it so search bar and upload button are only available when logged in
             />
-            <Button 
-              fz={14} 
-              bg="var(--cwrutrueblue)" 
-              flex="0 0 auto" 
+            <Button
+              fz={14}
+              bg="var(--cwrutrueblue)"
+              flex="0 0 auto"
               onClick={() => {
                 if (isAuthenticated) {
                   open();
                 } else {
                   window.open("/login", "_blank");
                 }
-              }}>
+              }}
+            >
               Upload Syllabus
             </Button>
           </Group>
@@ -84,19 +85,21 @@ const Wrapper = ({ children }: WrapperProps) => {
                     Another Related link
                   </Link>
                 </List.Item>
-                {isAuthenticated ?
+                {isAuthenticated ? (
                   <List.Item>
                     <Link to="/logout" target="_blank">
                       Log Out
                     </Link>
                   </List.Item>
-                  : <></>}
+                ) : (
+                  <></>
+                )}
               </List>
             </Box>
             <Box flex={2}>
-              <i>*Disclaimer</i>: Syllabi and class content are subject to change at the discretion of
-              the instructor. Do not assume information from a syllabus linked here is 100% accurate
-              to a course's content.
+              <i>*Disclaimer</i>: Syllabi and class content are subject to change at the discretion
+              of the instructor. Do not assume information from a syllabus linked here is 100%
+              accurate to a course's content.
             </Box>
           </Group>
         </Box>

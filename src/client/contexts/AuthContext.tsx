@@ -1,6 +1,14 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
-type AuthStatus = "loading" | "authenticated" | "unauthenticated" ;
+type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 
 interface AuthContextValue {
   isAuthenticated: boolean;
@@ -50,11 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [status, checkAuth],
   );
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

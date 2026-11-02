@@ -7,17 +7,15 @@ const Home = () => {
   const { isAuthenticated, status } = useAuth();
 
   if (status === "loading") {
-    return <Container className="home" p="xl" ta="center">Checking authentication...</Container>;
+    return (
+      <Container className="home" p="xl" ta="center">
+        Checking authentication...
+      </Container>
+    );
   }
   // TODO: Loader circle for this ^
 
-  return (
-    <>
-      {isAuthenticated ?
-        <LoggedInHome />
-      : <LoggedOutHome />}
-    </>
-  );
+  return <>{isAuthenticated ? <LoggedInHome /> : <LoggedOutHome />}</>;
 };
 
 export default Home;
