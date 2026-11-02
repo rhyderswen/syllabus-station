@@ -4,12 +4,15 @@ import Home from "@/pages/Home";
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router";
 import "./App.css";
 import CoursePage from "./pages/CoursePage";
+import { AuthProvider } from "./contexts/AuthContext";
 
 function Layout() {
   return (
-    <Wrapper>
-      <Outlet />
-    </Wrapper>
+    <AuthProvider>
+      <Wrapper>
+        <Outlet />
+      </Wrapper>
+    </AuthProvider>
   );
 }
 
