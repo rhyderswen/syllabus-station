@@ -1,9 +1,11 @@
-import { Box, Collapse, Divider, Group, Paper, Table, Text } from "@mantine/core";
+import { Box, Collapse, Divider, Group, Paper, Table, Text, UnstyledButton } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { CaretDownIcon } from "@phosphor-icons/react";
 import { SemesterData } from "~/types";
 
-function CourseSemester({ semester, syllabi }: SemesterData) {
+type CourseSemesterProps = SemesterData & { openPDFModal: (link: string, title: string) => void };
+
+function CourseSemester({ semester, syllabi, openPDFModal }: CourseSemesterProps) {
   const [expanded, { toggle }] = useDisclosure(true);
 
   function formatDate(isoDate: string) {
@@ -28,9 +30,14 @@ function CourseSemester({ semester, syllabi }: SemesterData) {
             {syllabi.map((syllabus, index) => (
               <Table.Tr key={index}>
                 <Table.Td>
-                  <a href={syllabus.pdfLink} target="_blank" rel="noopener noreferrer">
+                  <UnstyledButton
+                    onClick={() => openPDFModal(syllabus.pdfLink, syllabus.filename)}
+                    onAuxClick={() => window.open(syllabus.pdfLink, "_blank")}
+                    fw={700}
+                    className="blue-link"
+                  >
                     {syllabus.filename}
-                  </a>
+                  </UnstyledButton>
                   , taught by {syllabus.professor}
                 </Table.Td>
                 <Table.Td ta="right" w="fit-content">
