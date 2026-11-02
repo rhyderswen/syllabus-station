@@ -1,8 +1,8 @@
 import CourseSemester from "@/components/CourseSemester";
 import PDFViewer from "@/components/PDFViewer";
-import { Container, Modal, Stack, Title } from "@mantine/core";
+import { Container, Group, Loader, Modal, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { CourseData } from "~/types";
 
 const CoursePage = () => {
@@ -59,7 +59,15 @@ const CoursePage = () => {
           header: { backgroundColor: "var(--cwrugray)" },
         }}
       >
-        <PDFViewer url={currentPDFLink} />
+        <Suspense
+          fallback={
+            <Group miw="40vw" h="40vh" justify="center" gap="xs">
+              Loading Document... <Loader color="var(--cwrublue)" size="sm" />
+            </Group>
+          }
+        >
+          <PDFViewer url={currentPDFLink} />
+        </Suspense>
       </Modal>
       {data && (
         <>

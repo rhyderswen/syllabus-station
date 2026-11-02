@@ -1,7 +1,3 @@
-import { useEffect, useRef, useState } from "react";
-import { ErrorBoundary } from "react-error-boundary";
-import { Document, Page, pdfjs } from "react-pdf";
-
 import { Box, Text, Toolbar } from "@mantine/core";
 import { useIntersection } from "@mantine/hooks";
 import {
@@ -10,6 +6,9 @@ import {
   MagnifyingGlassPlusIcon,
 } from "@phosphor-icons/react";
 import workerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+import { useEffect, useRef, useState } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
@@ -124,7 +123,15 @@ const PDFViewer = ({ url }: PDFViewerProps) => {
           <ArrowSquareOutIcon size={18} weight="bold" />
         </Toolbar.Toggle>
       </Toolbar>
-      <Box ref={scrollRef} style={{ overflow: "auto", maxHeight: "80vh", borderRadius: "0.5rem" }}>
+      <Box
+        ref={scrollRef}
+        style={{
+          overflow: "auto",
+          maxHeight: "80vh",
+          borderRadius: "0.5rem",
+          scrollbarGutter: "stable",
+        }}
+      >
         <ErrorBoundary fallback={<p>Failed to load PDF.</p>}>
           <Document
             file={url}

@@ -1,17 +1,29 @@
 import { Box, Collapse, Divider, Group, Paper, Table, Text, UnstyledButton } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { CaretDownIcon } from "@phosphor-icons/react";
+import { MouseEvent } from "react";
 import { SemesterData } from "~/types";
+
+function formatDate(isoDate: string) {
+  const date = new Date(isoDate);
+  return date.toLocaleDateString(undefined, { dateStyle: "short" });
+}
 
 type CourseSemesterProps = SemesterData & { openPDFModal: (link: string, title: string) => void };
 
 function CourseSemester({ semester, syllabi, openPDFModal }: CourseSemesterProps) {
   const [expanded, { toggle }] = useDisclosure(true);
 
-  function formatDate(isoDate: string) {
-    const date = new Date(isoDate);
-    return date.toLocaleDateString(undefined, { dateStyle: "short" });
-  }
+  const handleLeftClick = (e: MouseEvent<HTMLAnchorElement>, pdfLink: string, filename: string) => {
+    // if the user wants to open in a new tab, still redirect to the link
+    if (e.metaKey || e.ctrlKey || e.shiftKey) {
+      return;
+    }
+
+    e.preventDefault();
+
+    openPDFModal(pdfLink, filename);
+  };
 
   return (
     <Paper shadow="xs" id={semester}>
@@ -31,8 +43,9 @@ function CourseSemester({ semester, syllabi, openPDFModal }: CourseSemesterProps
               <Table.Tr key={index}>
                 <Table.Td>
                   <UnstyledButton
-                    onClick={() => openPDFModal(syllabus.pdfLink, syllabus.filename)}
-                    onAuxClick={() => window.open(syllabus.pdfLink, "_blank")}
+                    component="a"
+                    href={syllabus.pdfLink}
+                    onClick={(e) => handleLeftClick(e, syllabus.pdfLink, syllabus.filename)}
                     className="blue-link"
                   >
                     {syllabus.filename}
