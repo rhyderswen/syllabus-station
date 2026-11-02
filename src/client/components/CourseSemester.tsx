@@ -33,7 +33,6 @@ function CourseSemester({ semester, syllabi, openPDFModal }: CourseSemesterProps
                   <UnstyledButton
                     onClick={() => openPDFModal(syllabus.pdfLink, syllabus.filename)}
                     onAuxClick={() => window.open(syllabus.pdfLink, "_blank")}
-                    fw={700}
                     className="blue-link"
                   >
                     {syllabus.filename}
