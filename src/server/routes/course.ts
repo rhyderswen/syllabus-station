@@ -5,7 +5,7 @@ import {prismaGlobal} from "~/sharedDb";
 
 let router = express.Router();
 
-router.get("/courselist", async (req, res) => {
+router.get("/suggest", async (req, res) => {
     const courseSearch = req.query.courseID as string;
 
     if(!courseSearch) {
@@ -46,3 +46,5 @@ router.get("/courselist", async (req, res) => {
         res.status(500).send("Server Error.");
     }
 });
+
+export default router;
