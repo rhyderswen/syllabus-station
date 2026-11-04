@@ -45,4 +45,29 @@ router.get("/suggest", async (req, res) => {
   }
 });
 
+router.get("/catalogCode", async (req, res) => {
+  const courseSearch = req.query.courseID as string;
+
+  if (!courseSearch) {
+    return res.status(400).send("Missing Course ID.");
+  }
+
+  try {
+    const courses = await prismaGlobal.course.findMany({
+      where: { catalogCode: courseSearch },
+    });
+
+    if (!courses) {
+      return res.status(404).send("No courses found.");
+    }
+
+    res.send({ courses: courses });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server Error.");
+  }
+});
+
+export default router;
+
 export default router;

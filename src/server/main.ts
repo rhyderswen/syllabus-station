@@ -8,6 +8,7 @@ import { resolveConfig } from "vite";
 
 import authRouter from "./routes/auth.js";
 import syllabusRouter from "./routes/syllabus.js";
+import courseRouter from "./routes/course.js";
 
 import * as fs from "node:fs";
 import path from "node:path";
@@ -34,6 +35,7 @@ app.use((req, res, next) => {
 
 app.use("/", authRouter);
 app.use("/syllabus", syllabusRouter);
+app.use("/course", courseRouter);
 
 app.get("/hello", (_, res) => {
   res.send("Hello Vite + React + TypeScript!");
