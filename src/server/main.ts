@@ -34,8 +34,8 @@ app.use((req, res, next) => {
 });
 
 app.use("/", authRouter);
-app.use('/syllabus', syllabusRouter);
-app.use('/course', courseRouter);
+app.use("/syllabus", syllabusRouter);
+app.use("/course", courseRouter);
 
 app.get("/hello", (_, res) => {
   res.send("Hello Vite + React + TypeScript!");
