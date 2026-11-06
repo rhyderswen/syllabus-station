@@ -1,4 +1,4 @@
-import { Box, Text, Toolbar } from "@mantine/core";
+import { Box, Group, Loader, Text, Toolbar } from "@mantine/core";
 import { useIntersection } from "@mantine/hooks";
 import {
   ArrowSquareOutIcon,
@@ -53,6 +53,12 @@ function PageSlot({ pageNumber, scale, size, root, onFirstPageLoad }: PageSlotPr
   );
 }
 
+const loadingFallback = (
+  <Group miw="40vw" h="40vh" justify="center" gap="xs">
+    Loading Document... <Loader color="var(--cwrublue)" size="sm" />
+  </Group>
+);
+
 interface PDFViewerProps {
   url: string;
 }
@@ -89,8 +95,13 @@ const PDFViewer = ({ url }: PDFViewerProps) => {
         size="lg"
         pos="absolute"
         bottom={10}
-        right={10}
-        style={{ zIndex: 10 }}
+        left="50%"
+        style={{
+          transform: "translateX(-50%)",
+          zIndex: 10,
+          whiteSpace: "nowrap",
+          flexWrap: "nowrap",
+        }}
       >
         <Text size="sm" ml={6}>
           {currentPage} / {numPages}
@@ -135,8 +146,9 @@ const PDFViewer = ({ url }: PDFViewerProps) => {
         <ErrorBoundary fallback={<p>Failed to load PDF.</p>}>
           <Document
             file={url}
+            suspense={false}
             onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-            loading={<p>Loading document…</p>}
+            loading={loadingFallback}
             error={<p>Failed to load PDF.</p>}
             scale={scale}
           >
