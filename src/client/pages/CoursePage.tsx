@@ -1,10 +1,21 @@
 import CourseSemester from "@/components/CourseSemester";
-import { Container, Stack, Title } from "@mantine/core";
+import PDFViewer from "@/components/PDFViewer";
+import { Container, Modal, Stack, Title } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { CourseData } from "~/types";
 
 const CoursePage = () => {
   const [data, setData] = useState<CourseData | null>(null);
+  const [currentPDFLink, setCurrentPDFLink] = useState("");
+  const [currentPDFTitle, setCurrentPDFTitle] = useState("");
+  const [pdfOpened, { open, close }] = useDisclosure(false);
+
+  function openPDFModal(link: string, title: string) {
+    setCurrentPDFLink(link);
+    setCurrentPDFTitle(title);
+    open();
+  }
 
   const fetchList = async (courseID: string) => {
     try {
@@ -32,6 +43,24 @@ const CoursePage = () => {
 
   return (
     <Container className="course" p="md" w="100%">
+      <Modal
+        opened={pdfOpened}
+        onClose={close}
+        title={currentPDFTitle}
+        size="auto"
+        centered
+        overlayProps={{
+          color: "#000",
+          backgroundOpacity: 0.55,
+          blur: 3,
+        }}
+        styles={{
+          content: { backgroundColor: "var(--cwrugray)" },
+          header: { backgroundColor: "var(--cwrugray)" },
+        }}
+      >
+        <PDFViewer url={currentPDFLink} />
+      </Modal>
       {data && (
         <>
           <Title order={1} mt="md" mb="xl" ta="center">
@@ -43,6 +72,7 @@ const CoursePage = () => {
                 key={semester.semester}
                 semester={semester.semester}
                 syllabi={semester.syllabi}
+                openPDFModal={openPDFModal}
               />
             ))}
           </Stack>
