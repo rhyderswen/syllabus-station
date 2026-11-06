@@ -90,50 +90,52 @@ const PDFViewer = ({ url }: PDFViewerProps) => {
 
   return (
     <Box pos="relative">
-      <Toolbar
-        w="fit-content"
-        size="lg"
-        pos="absolute"
-        bottom={10}
-        left="50%"
-        style={{
-          transform: "translateX(-50%)",
-          zIndex: 10,
-          whiteSpace: "nowrap",
-          flexWrap: "nowrap",
-        }}
-      >
-        <Text size="sm" ml={6}>
-          {currentPage} / {numPages}
-        </Text>
+      {numPages > 0 && (
+        <Toolbar
+          w="fit-content"
+          size="lg"
+          pos="absolute"
+          bottom={10}
+          left="50%"
+          style={{
+            transform: "translateX(-50%)",
+            zIndex: 10,
+            whiteSpace: "nowrap",
+            flexWrap: "nowrap",
+          }}
+        >
+          <Text size="sm" ml={6}>
+            {currentPage} / {numPages}
+          </Text>
 
-        <Toolbar.Divider />
+          <Toolbar.Divider />
 
-        <Toolbar.ToggleGroup type="single" value={null}>
-          <Toolbar.ToggleItem
-            value="zoomOut"
-            onClick={() => setScale((prev) => Math.max(0.5, prev - 0.5))}
-            className="toolbar-button"
-            disabled={scale <= 0.5}
-          >
-            <MagnifyingGlassMinusIcon size={18} weight="bold" />
-          </Toolbar.ToggleItem>
-          <Toolbar.ToggleItem
-            value="zoomIn"
-            onClick={() => setScale((prev) => Math.min(2.5, prev + 0.5))}
-            className="toolbar-button"
-            disabled={scale >= 2.5}
-          >
-            <MagnifyingGlassPlusIcon size={18} weight="bold" />
-          </Toolbar.ToggleItem>
-        </Toolbar.ToggleGroup>
+          <Toolbar.ToggleGroup type="single" value={null}>
+            <Toolbar.ToggleItem
+              value="zoomOut"
+              onClick={() => setScale((prev) => Math.max(0.5, prev - 0.5))}
+              className="toolbar-button"
+              disabled={scale <= 0.5}
+            >
+              <MagnifyingGlassMinusIcon size={18} weight="bold" />
+            </Toolbar.ToggleItem>
+            <Toolbar.ToggleItem
+              value="zoomIn"
+              onClick={() => setScale((prev) => Math.min(2.5, prev + 0.5))}
+              className="toolbar-button"
+              disabled={scale >= 2.5}
+            >
+              <MagnifyingGlassPlusIcon size={18} weight="bold" />
+            </Toolbar.ToggleItem>
+          </Toolbar.ToggleGroup>
 
-        <Toolbar.Divider />
+          <Toolbar.Divider />
 
-        <Toolbar.Toggle component="a" href={url} target="_blank" className="toolbar-button">
-          <ArrowSquareOutIcon size={18} weight="bold" />
-        </Toolbar.Toggle>
-      </Toolbar>
+          <Toolbar.Toggle component="a" href={url} target="_blank" className="toolbar-button">
+            <ArrowSquareOutIcon size={18} weight="bold" />
+          </Toolbar.Toggle>
+        </Toolbar>
+      )}
       <Box
         ref={scrollRef}
         style={{
