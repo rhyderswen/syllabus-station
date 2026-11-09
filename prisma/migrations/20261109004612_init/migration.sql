@@ -36,6 +36,7 @@ CREATE TABLE "Syllabi" (
     "fileID" TEXT NOT NULL,
     "uploadDate" TIMESTAMP(3) NOT NULL,
     "uploader" TEXT NOT NULL,
+    "filename" TEXT NOT NULL,
 
     CONSTRAINT "Syllabi_pkey" PRIMARY KEY ("id")
 );

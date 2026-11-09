@@ -117,7 +117,7 @@ router.get("/list", async (req, res) => {
             semester: semester,
             syllabi: [
               {
-                filename: `${syllabus.fileID}`,
+                filename: `${syllabus.filename}`,
                 pdfLink: presigned,
                 professor: syllabus.professor,
                 uploadDate: syllabus.uploadDate,
@@ -126,7 +126,7 @@ router.get("/list", async (req, res) => {
           });
         } else {
           courseData.semesters[semesterIndex].syllabi.push({
-            filename: `${syllabus.fileID}`,
+            filename: `${syllabus.filename}`,
             pdfLink: presigned,
             professor: syllabus.professor,
             uploadDate: syllabus.uploadDate,
@@ -183,6 +183,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
             id: courseID,
           },
         },
+        filename: req.file.originalname,
         user: {
           connect: {
             id: (req.user as any).netId,
