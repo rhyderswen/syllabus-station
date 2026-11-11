@@ -104,11 +104,15 @@ router.get("/auth/refresh", async (req, res) => {
     });
 
     if (!dbToken) {
+      res.clearCookie("token");
+      res.clearCookie("refreshToken");
       return res.status(403).send("Invalid or expired refresh token");
     }
 
     if (dbToken.expiresAt.getTime() < Date.now()) {
       await prismaGlobal.refreshToken.delete({ where: { token: refreshToken } });
+      res.clearCookie("token");
+      res.clearCookie("refreshToken");
       return res.status(403).send("Invalid or expired refresh token");
     }
 

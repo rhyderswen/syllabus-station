@@ -49,7 +49,6 @@ export async function authFetch(input: string, init: RequestInit = {}): Promise<
       await refreshSession();
     } catch {
       // Refresh failed
-      // TODO: logout
       throw new ApiError(401, "Session expired");
     }
     res = await doFetch(); // retry once
