@@ -22,7 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryKey: ["auth"],
     queryFn: async () => {
       try {
-        await authFetch("/checkAuth", { method: "GET" });
+        await authFetch("/auth/checkAuth", { method: "GET" });
         return true;
       } catch (error) {
         // 401 is not logged in, not an error

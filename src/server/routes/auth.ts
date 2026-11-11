@@ -1,6 +1,6 @@
 import express from "express";
-import passport from "passport";
 import jwt from "jsonwebtoken";
+import passport from "passport";
 
 import { Strategy as CasStrategy } from "@coursetable/passport-cas";
 import { prismaGlobal } from "~/sharedDb";
@@ -77,7 +77,7 @@ router.post(
   }),
 );
 
-router.get("/checkAuth", (req, res) => {
+router.get("/auth/checkAuth", (req, res) => {
   if (!req.user) {
     return res.status(401).send("Unauthorized");
   }
@@ -90,7 +90,7 @@ router.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-router.get("/refresh", async (req, res) => {
+router.get("/auth/refresh", async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
 
   if (!refreshToken) {

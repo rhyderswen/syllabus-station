@@ -31,7 +31,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/auth", authRouter);
+app.use("/", authRouter);
 app.use("/syllabus", syllabusRouter);
 
 app.get("/hello", (_, res) => {
