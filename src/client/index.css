@@ -8,6 +8,16 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+
+  --cwrublue: #003071;
+  --cwrugray: #d3d3d3;
+  --cwrutrueblue: #007ab8;
+  --link: #646cff;
+  --link-hover: #747bff;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
 }
 
 html {
@@ -16,11 +26,11 @@ html {
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--link);
   text-decoration: inherit;
 }
 a:hover {
-  color: #747bff;
+  color: var(--link-hover);
 }
 
 body {

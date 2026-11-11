@@ -2,10 +2,6 @@
   width: 100%;
   height: 100%;
   margin: 0 auto;
-
-  --cwrublue: #003071;
-  --cwrugray: #d3d3d3;
-  --cwrutrueblue: #007ab8;
 }
 
 .rotatable {
@@ -48,4 +44,18 @@
 
 .mantine-YearPickerInput-presetButton {
   margin-bottom: 8px;
+}
+
+.blue-link {
+  color: var(--cwrublue);
+  font-weight: 700;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: var(--cwrutrueblue);
+  }
+}
+
+.toolbar-button:hover:not(:disabled) {
+  color: var(--link-hover);
 }
