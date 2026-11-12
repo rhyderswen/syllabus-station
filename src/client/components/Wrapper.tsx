@@ -80,14 +80,9 @@ const Wrapper = ({ children }: WrapperProps) => {
                     Github
                   </Link>
                 </List.Item>
-                <List.Item>
-                  <Link to="/" target="_blank">
-                    Another Related link
-                  </Link>
-                </List.Item>
                 {isAuthenticated ? (
                   <List.Item>
-                    <Link to="/logout" target="_blank">
+                    <Link to="/logout" target="_parent">
                       Log Out
                     </Link>
                   </List.Item>

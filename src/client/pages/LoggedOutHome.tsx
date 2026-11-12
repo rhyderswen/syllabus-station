@@ -12,7 +12,7 @@ const LoggedOutHome = () => {
         // but until we have a proper logo/color scheme figured out, it's fine
       }
       In order to view and add syllabi, you must{" "}
-      <Link to="/login" target="_blank">
+      <Link to="/login" target="_parent">
         sign in
       </Link>{" "}
       with your CWRU account.
