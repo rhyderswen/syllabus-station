@@ -1,4 +1,4 @@
-import SyllabusStationLogo from "@/assets/SyllabusStation-full.png"; // placeholder to figure out spacing
+import SyllabusStationLogo from "@/assets/SyllabusStation-full-rounded.png";
 import { Autocomplete, Box, Button, Container, Group, Modal, List } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Link } from "react-router";
