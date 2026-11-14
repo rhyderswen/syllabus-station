@@ -22,8 +22,8 @@ const upload = multer({
 });
 
 router.get("/get", async (req, res) => {
-  //if (!req.user)
-  //    return res.status(401).send("Unauthorized.");
+    if (!req.user)
+       return res.status(401).send("Unauthorized.");
 
   const syllabusId = req.query.id as string;
 
