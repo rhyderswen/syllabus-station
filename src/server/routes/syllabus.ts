@@ -147,8 +147,14 @@ router.get("/list", async (req, res) => {
 
 router.post("/upload", upload.single("file"), async (req, res) => {
   if (!req.user) return res.status(401).send("Unauthorized.");
-
   if (!req.file) return res.status(400).send("Invalid request.");
+
+  let user = await prismaGlobal.user.findUnique({
+    where: {
+      id: (req.user as any).netId,
+    },
+  });
+  if (!user || user.isBanned) return res.status(401).send("Unauthorized.");
 
   // @ts-ignore
   const { professor, semester, courseID } = req.body;
@@ -216,6 +222,11 @@ router.delete("/delete", async (req, res) => {
   });
 
   try {
+    await prismaGlobal.syllabi.delete({
+      where: {
+        id: fileId,
+      },
+    });
     await S3Global.send(request);
     res.status(204).send("File deleted.");
   } catch (error) {
