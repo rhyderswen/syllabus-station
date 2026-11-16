@@ -1,6 +1,6 @@
 import express from "express";
 import multer, { memoryStorage } from "multer";
-import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 import { prismaGlobal } from "~/sharedDb";
 import { S3Global } from "~/sharedS3";
@@ -22,8 +22,7 @@ const upload = multer({
 });
 
 router.get("/get", async (req, res) => {
-    if (!req.user)
-       return res.status(401).send("Unauthorized.");
+  if (!req.user) return res.status(401).send("Unauthorized.");
 
   const syllabusId = req.query.id as string;
 
@@ -192,6 +191,33 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     });
 
     res.status(200).send({ id: created.id });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server error.");
+  }
+});
+
+router.delete("/delete", async (req, res) => {
+  if (!req.user) return res.status(401).send("Unauthorized.");
+  let user = await prismaGlobal.user.findUnique({
+    where: {
+      id: (req.user as any).netId,
+    },
+  });
+
+  if (!user || !user.isAdmin) return res.status(401).send("Unauthorized.");
+
+  const fileId = req.query.fileId;
+  if (!fileId) return res.status(400).send("Invalid request.");
+
+  const request = new DeleteObjectCommand({
+    Bucket: "syllabus-station",
+    Key: `${fileId}.pdf`,
+  });
+
+  try {
+    await S3Global.send(request);
+    res.status(204).send("File deleted.");
   } catch (error) {
     console.error(error);
     res.status(500).send("Server error.");
