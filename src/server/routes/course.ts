@@ -5,24 +5,25 @@ import { prismaGlobal } from "~/sharedDb";
 
 let router = express.Router();
 
-router.get("/courselist", async (req, res) => {
-    if(!req.user)
-        return res.status(401).send("Unauthorized.");
+router.get("/search", async (req, res) => {
+  if (!req.user) return res.status(401).send("Unauthorized.");
 
-    const courseSearch = req.query.courseID as string;
+  const courseSearch = req.query.query as string;
 
   if (!courseSearch) {
     return res.status(400).send("Missing Course ID.");
   }
 
-    try{
-        const courses = await prismaGlobal.course.findMany();
+  try {
+    const courses = await prismaGlobal.course.findMany();
 
     if (!courses) {
       return res.status(404).send("No courses found.");
     }
 
-    const sortedCourses = fuzzysort.go(courseSearch, courses, { keys: ["catalogCode", "title"] });
+    const sortedCourses = fuzzysort
+      .go(courseSearch, courses, { keys: ["catalogCode", "title"] })
+      .map((result) => result.obj);
 
     res.send({ courses: sortedCourses });
   } catch (error) {
@@ -32,10 +33,9 @@ router.get("/courselist", async (req, res) => {
 });
 
 router.get("/catalogCode", async (req, res) => {
-    if(!req.user)
-        return res.status(401).send("Unauthorized.");
+  if (!req.user) return res.status(401).send("Unauthorized.");
 
-    const courseSearch = req.query.courseID as string;
+  const courseSearch = req.query.courseID as string;
 
   if (!courseSearch) {
     return res.status(400).send("Missing Course ID.");
@@ -50,61 +50,58 @@ router.get("/catalogCode", async (req, res) => {
       return res.status(404).send("No courses found.");
     }
 
-        res.send({courses: courses});
-    } catch(error) {
-        console.error(error);
-        res.status(500).send("Server Error.");
-    }
-})
+    res.send({ courses: courses });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server Error.");
+  }
+});
 
 router.get("/listInstructors", async (req, res) => {
-    if(!req.user)
-        return res.status(401).send("Unauthorized.");
+  if (!req.user) return res.status(401).send("Unauthorized.");
 
-    const course = req.query.catalogCode as string;
+  const course = req.query.catalogCode as string;
 
-    if(!course) {
-        return res.status(400).send("Missing Course ID.");
+  if (!course) {
+    return res.status(400).send("Missing Course ID.");
+  }
+
+  try {
+    const courseID = await prismaGlobal.course.findFirst({
+      where: {
+        catalogCode: course,
+      },
+
+      select: {
+        id: true,
+      },
+    });
+
+    if (!courseID) {
+      return res.status(400).send("Course not found.");
     }
 
-    try {
-        const courseID = await prismaGlobal.course.findFirst({
-            where: {
-                catalogCode: course
-            },
+    const instructors = await prismaGlobal.syllabi.findMany({
+      where: {
+        course: courseID,
+      },
 
-            select: {
-                id: true
-            }
-        });
+      distinct: ["professor"],
 
-        if(!courseID) {
-            return res.status(400).send("Course not found.");
-        }
+      select: {
+        professor: true,
+      },
+    });
 
-        const instructors = await prismaGlobal.syllabi.findMany({
-            where: {
-                course: courseID
-            },
-
-            distinct: ["professor"],
-
-            select: {
-                professor: true
-            }
-        });
-
-        if(!instructors) {
-            return res.status(400).send("No instructors were found.");
-        }
-
-        res.send({instructors: instructors});
+    if (!instructors) {
+      return res.status(400).send("No instructors were found.");
     }
 
-    catch(error) {
-        console.error(error);
-        res.status(500).send("Server Error.");
-    }
-})
+    res.send({ instructors: instructors });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server Error.");
+  }
+});
 
 export default router;
