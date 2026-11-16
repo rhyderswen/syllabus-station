@@ -71,6 +71,7 @@ async function main() {
       },
       fileID: "945cebfd-bd70-4268-8398-f0a227351de7",
       uploadDate: new Date(Date.now()),
+      filename: "CSDS132-F25-syllabus.pdf",
       user: {
         connect: {
           id: "hsc",
@@ -93,6 +94,7 @@ async function main() {
       },
       fileID: "3057b6bd-8fe8-4939-a429-846caf6cbb22",
       uploadDate: new Date(Date.now()),
+      filename: "CSDS132-S26-syllabus.pdf",
       user: {
         connect: {
           id: "hsc",
@@ -115,6 +117,7 @@ async function main() {
       },
       fileID: "3057b6bd-8fe8-4939-a429-846caf6cbb22",
       uploadDate: new Date(Date.now()),
+      filename: "bkrupp-compsec-syllabus-s26.pdf",
       user: {
         connect: {
           id: "hsc",
