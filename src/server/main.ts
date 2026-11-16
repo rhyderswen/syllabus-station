@@ -1,10 +1,9 @@
-import express from "express";
-import ViteExpress from "vite-express";
-import "dotenv/config";
 import cookieParser from "cookie-parser";
+import "dotenv/config";
+import express from "express";
 import jwt from "jsonwebtoken";
 import https from "node:https";
-import { resolveConfig } from "vite";
+import ViteExpress from "vite-express";
 
 import authRouter from "./routes/auth.js";
 import syllabusRouter from "./routes/syllabus.js";

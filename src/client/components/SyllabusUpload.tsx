@@ -1,9 +1,11 @@
-import { Box, Button, Group, Paper, Text, Select, TextInput } from "@mantine/core";
+import { authFetch, queryClient } from "@/util/api";
+import { Box, Button, Group, Paper, Select, Text, TextInput } from "@mantine/core";
 import { YearPickerInput } from "@mantine/dates";
-import { IconFile, IconUpload, IconX } from "@tabler/icons-react";
-import { useDropzone } from "react-dropzone";
 import { useForm } from "@mantine/form";
+import { IconFile, IconUpload, IconX } from "@tabler/icons-react";
+import { useMutation } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { useDropzone } from "react-dropzone";
 
 interface SyllabusUploadProps {
   onClose: () => void;
@@ -30,44 +32,53 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
     },
   });
 
+  interface UploadSyllabusInput {
+    file: File;
+    instructor: string;
+    semester: string;
+    courseID: string;
+  }
+
+  const submitSyllabusMutation = useMutation({
+    mutationFn: async (vals: UploadSyllabusInput) => {
+      const data = new FormData();
+      data.append("file", vals.file);
+      data.append("professor", vals.instructor.trim());
+      data.append("semester", vals.semester);
+      data.append("courseID", vals.courseID);
+
+      const res = await authFetch("/syllabus/upload", { method: "POST", body: data });
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: ["course", variables.courseID],
+      });
+    },
+  });
+
   const handleSubmit = async (values: typeof form.values) => {
     if (!values.file) {
       return;
     }
 
-    // Debug, verify input matches these logs
-    console.log("Form values:", values);
-    console.log("File object:", values.file);
-
-    const data = new FormData();
-
     const year = dayjs(values.year).format("YYYY");
     const semester = `${values.sem} ${year}`;
 
-    data.append("file", values.file);
-    data.append("professor", values.instructor.trim());
-    data.append("semester", semester);
-    data.append("courseID", values.courseID);
-
-    try {
-      const response = await fetch("/syllabus/upload", {
-        method: "POST",
-        body: data,
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        const message = await response.text();
-        throw new Error(message || "Failed to upload syllabus");
-      }
-
-      const result: { id: string } = await response.json();
-
-      onClose();
-      form.reset();
-    } catch (error) {
-      console.error("Error uploading syllabus:", error);
-    }
+    await submitSyllabusMutation.mutateAsync(
+      {
+        file: values.file,
+        instructor: values.instructor,
+        semester,
+        courseID: values.courseID,
+      },
+      {
+        onSuccess: () => {
+          onClose();
+          form.reset();
+        },
+      },
+    );
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -252,7 +263,9 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
       </Box>
 
       <Group justify="flex-end" mt="md" fz={14}>
-        <Button type="submit">Submit</Button>
+        <Button type="submit" loading={submitSyllabusMutation.isPending}>
+          Submit
+        </Button>
       </Group>
     </Box>
   );
