@@ -81,7 +81,22 @@ router.get("/auth/checkAuth", (req, res) => {
   if (!req.user) {
     return res.status(401).send("Unauthorized");
   }
-  res.status(200).send("Authenticated");
+  let output = { isBanned: false, isAdmin: false };
+
+  prismaGlobal.user
+    .findUnique({
+      where: { id: (req.user as any).netId },
+      select: { isBanned: true, isAdmin: true },
+    })
+    .then((user) => {
+      if (user == null) {
+        return res.status(401).send("Unauthorized");
+      }
+
+      output.isBanned = user.isBanned;
+      output.isAdmin = user.isAdmin;
+      res.status(200).send(output);
+    });
 });
 
 router.get("/logout", (req, res) => {
