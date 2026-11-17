@@ -6,6 +6,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { CourseData } from "~/types";
+import { formatCourseCode } from "../util/textFormatting";
 
 const TEMP_COURSE_ID = "f0bd28a7-ffb9-4015-a62f-9523b723e1f5";
 
@@ -55,7 +56,7 @@ const CoursePage = () => {
       {!isLoading && !isError && data && (
         <>
           <Title order={1} mt="md" mb="xl" ta="center">
-            <b style={{ color: "var(--cwrublue)" }}>{data.code}</b>: {data.name}
+            <b style={{ color: "var(--cwrublue)" }}>{formatCourseCode(data.code)}</b>: {data.name}
           </Title>
           <Stack w="100%" gap="xs">
             {data.semesters.map((semester) => (

@@ -13,3 +13,10 @@ export interface SemesterData {
     uploadDate: string;
   }[];
 }
+
+// Information returned by search endpoint
+export interface Course {
+  id: string;
+  title: string;
+  catalogCode: string;
+}
