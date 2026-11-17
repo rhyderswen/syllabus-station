@@ -44,5 +44,6 @@ model Syllabi {
   fileID     String
   uploadDate DateTime
   uploader   String
+  filename   String
   user       User     @relation(fields: [uploader], references: [id])
 }
