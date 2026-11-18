@@ -209,6 +209,14 @@ router.post("/upload", upload.single("file"), async (req, res) => {
 
     res.status(200).send({ id: created.id });
   } catch (error) {
+    if (!course) {
+      await prismaGlobal.course.delete({
+        where: {
+          id: courseID,
+        },
+      });
+    }
+
     console.error(error);
     res.status(500).send("Server error.");
   }
