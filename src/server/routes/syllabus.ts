@@ -6,7 +6,7 @@ import { prismaGlobal } from "~/sharedDb";
 import { S3Global } from "~/sharedS3";
 import { randomUUID } from "crypto";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { CourseData } from "~/types";
+import { catalogCodeRegex, CourseData } from "~/types";
 
 let router = express.Router();
 
@@ -57,8 +57,6 @@ router.get("/get", async (req, res) => {
 
 router.get("/list", async (req, res) => {
   if (!req.user) return res.status(401).send("Unauthorized.");
-
-  console.log("hi");
 
   const courseID = req.query.courseID as string;
 
@@ -157,14 +155,33 @@ router.post("/upload", upload.single("file"), async (req, res) => {
   if (!user || user.isBanned) return res.status(401).send("Unauthorized.");
 
   // @ts-ignore
-  const { professor, semester, courseID } = req.body;
+  let { professor, semester, courseID, catalogCode, title } = req.body;
 
-  if (!professor || !semester || !courseID) {
+  if (!professor || !semester || !courseID || !catalogCode || !title) {
     return res.status(400).send("Invalid request.");
   }
 
-  if (!(await prismaGlobal.course.findUnique({ where: { id: courseID } })))
-    return res.status(400).send("Course does not exist.");
+  let course = await prismaGlobal.course.findUnique({
+    where: {
+      id: courseID,
+    },
+  });
+
+  if (!course) {
+    courseID = randomUUID();
+
+    if (!catalogCodeRegex.test(catalogCode)) {
+      return res.status(400).send("Invalid catalog code.");
+    }
+
+    await prismaGlobal.course.create({
+      data: {
+        id: courseID,
+        catalogCode: catalogCode,
+        title: title,
+      },
+    });
+  }
 
   let fileID = randomUUID();
 
@@ -199,6 +216,14 @@ router.post("/upload", upload.single("file"), async (req, res) => {
 
     res.status(200).send({ id: created.id });
   } catch (error) {
+    if (!course) {
+      await prismaGlobal.course.delete({
+        where: {
+          id: courseID,
+        },
+      });
+    }
+
     console.error(error);
     res.status(500).send("Server error.");
   }
