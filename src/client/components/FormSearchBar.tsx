@@ -21,6 +21,7 @@ export interface FormSearchBarProps {
   error?: React.ReactNode;
   minSearchLength?: number;
   searchEnabled?: boolean;
+  maxLength?: number;
 }
 
 function FormSearchBar({
@@ -33,8 +34,9 @@ function FormSearchBar({
   disabled = false,
   required = false,
   error,
-  minSearchLength = 2,
+  minSearchLength = 1,
   searchEnabled = true,
+  maxLength,
 }: FormSearchBarProps) {
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
@@ -42,7 +44,7 @@ function FormSearchBar({
   const [options, setOptions] = useState<SearchOption[]>([]);
   const [searchPending, setSearchPending] = useState(false);
 
-  const searchQuery = value.trim();
+  const searchQuery = value.trim().replace(/:/g, "");
 
   useEffect(() => {
     if (!searchEnabled || disabled || searchQuery.length < minSearchLength) {
@@ -80,6 +82,10 @@ function FormSearchBar({
     };
   }, [searchQuery, search, disabled, minSearchLength, searchEnabled]);
 
+  useEffect(() => {
+    combobox.updateSelectedOptionIndex();
+  }, [options]);
+
   function handleChange(newValue: string) {
     onChange(newValue);
     combobox.resetSelectedOption();
@@ -116,16 +122,6 @@ function FormSearchBar({
           onClick={() => combobox.openDropdown()}
           onFocus={() => combobox.openDropdown()}
           onBlur={() => combobox.closeDropdown()}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              const selectedIndex = combobox.getSelectedOptionIndex();
-
-              if (selectedIndex !== -1) {
-                event.preventDefault();
-                combobox.selectActiveOption();
-              }
-            }
-          }}
           rightSection={
             searchPending ? (
               <Loader size={18} />
@@ -139,6 +135,7 @@ function FormSearchBar({
               />
             ) : undefined
           }
+          maxLength={maxLength}
         />
       </Combobox.Target>
 

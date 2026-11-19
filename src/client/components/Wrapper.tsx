@@ -46,6 +46,7 @@ const Wrapper = ({ children }: WrapperProps) => {
               onSubmit={(course) => {
                 navigate(`/course/${course.catalogCode}`);
               }}
+              isAuthenticated={isAuthenticated}
             />
             <Button
               fz={14}

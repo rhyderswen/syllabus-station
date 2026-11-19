@@ -1,4 +1,5 @@
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, queryOptions } from "@tanstack/react-query";
+import { CourseData, Course } from "~/types";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,4 +59,43 @@ export async function authFetch(input: string, init: RequestInit = {}): Promise<
     throw new ApiError(res.status, (await res.text()) || res.statusText);
   }
   return res;
+}
+
+export function courseQuery(courseCode: string) {
+  return queryOptions({
+    queryKey: ["course", courseCode],
+
+    queryFn: async () => {
+      const courseResponse = await authFetch(
+        `/course/catalogCode?courseID=${encodeURIComponent(courseCode)}`,
+        {
+          method: "GET",
+        },
+      );
+
+      if (!courseResponse.ok) {
+        throw new Error("Failed to fetch course");
+      }
+
+      const courseData: { courses: Course[] } = await courseResponse.json();
+
+      if (courseData.courses.length === 0) {
+        return null;
+      }
+
+      const courseID = courseData.courses[0].id;
+
+      const response = await authFetch(`/syllabus/list?courseID=${encodeURIComponent(courseID)}`, {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch syllabi");
+      }
+
+      return (await response.json()) as CourseData;
+    },
+
+    staleTime: 60 * 60 * 1000, // 1 hour
+  });
 }

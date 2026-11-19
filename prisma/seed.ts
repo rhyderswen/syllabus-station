@@ -33,7 +33,7 @@ async function main() {
     create: {
       id: "f0bd28a7-ffb9-4015-a62f-9523b723e1f5",
       title: "Introduction to Java",
-      catalogCode: "CSDS132",
+      catalogCode: "CSDS 132",
     },
   });
 
@@ -43,7 +43,7 @@ async function main() {
     create: {
       id: "fa4db26a-be1b-4738-93f0-79b119ae2f33",
       title: "Calculus for Science and Engineering I",
-      catalogCode: "MATH121",
+      catalogCode: "MATH 121",
     },
   });
 
@@ -53,7 +53,7 @@ async function main() {
     create: {
       id: "4c255eb2-f434-47f5-a59c-16e45c098a56",
       title: "Senior Project in Computer Science",
-      catalogCode: "CSDS395",
+      catalogCode: "CSDS 395",
     },
   });
 

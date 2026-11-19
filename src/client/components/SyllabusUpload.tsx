@@ -104,13 +104,27 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
           return "Enter a course title";
         }
 
+        if (value.length > 150) {
+          return "Course title cannot exceed 150 characters";
+        }
+
         if (!parseCourseTitle(value)) {
           return 'Enter a valid course title (ex: "CSDS 395: Senior Project in Computer Science")';
         }
 
         return null;
       },
-      instructor: (value) => (value.trim() ? null : "Enter an instructor"),
+      instructor: (value) => {
+        if (!value.trim()) {
+          return "Enter an instructor";
+        }
+
+        if (value.length > 60) {
+          return "Instructor name cannot exceed 60 characters";
+        }
+
+        return null;
+      },
       sem: (value) => (value ? null : "Select a semester"),
       file: (value) => (value ? null : "Upload a syllabus"),
     },
@@ -176,6 +190,34 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
 
       if (!parsedCourse) {
         form.setFieldError("courseID", "Enter a valid course title");
+        return;
+      }
+
+      try {
+        const courseResponse = await authFetch(
+          `/course/catalogCode?courseID=${encodeURIComponent(parsedCourse.catalogCode)}`,
+          {
+            method: "GET",
+          },
+        );
+
+        if (!courseResponse.ok) {
+          throw new Error("Failed to check for duplicate courses");
+        }
+
+        const courseData: { courses: Course[] } = await courseResponse.json();
+
+        if (courseData.courses.length > 0) {
+          form.setFieldError(
+            "courseID",
+            "A course with this course ID already exists. Either select it from the search results or correct this value.",
+          );
+          return;
+        }
+      } catch (error) {
+        console.error(error);
+
+        form.setFieldError("courseID", "Unable to verify course existence. Please try again.");
         return;
       }
 
@@ -263,6 +305,7 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
         }}
         search={courseSearch}
         error={form.errors.courseID}
+        maxLength={150}
       />
 
       <FormSearchBar
@@ -276,6 +319,7 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
         search={instructorSearch}
         searchEnabled={selectedCourse !== null}
         error={form.errors.instructor}
+        maxLength={60}
       />
 
       <Group grow align="flex-start">

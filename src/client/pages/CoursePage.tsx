@@ -1,16 +1,12 @@
 import CourseSemester from "@/components/CourseSemester";
 import PDFViewer from "@/components/PDFViewer";
-import { authFetch } from "@/util/api";
+import { courseQuery } from "@/util/api";
 import { Container, Modal, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { CourseData } from "~/types";
 import { formatCourseCode } from "../util/textFormatting";
 import { useParams } from "react-router";
-import { Course } from "~/types";
-
-const TEMP_COURSE_ID = "f0bd28a7-ffb9-4015-a62f-9523b723e1f5";
 
 const CoursePage = () => {
   const [currentPDFLink, setCurrentPDFLink] = useState("");
@@ -19,39 +15,8 @@ const CoursePage = () => {
   const { courseCode } = useParams<{ courseCode: string }>();
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["course", courseCode],
-
-    queryFn: async () => {
-      if (!courseCode) {
-        throw new Error("Missing course code");
-      }
-
-      const courseResponse = await authFetch(
-        `/course/catalogCode?courseID=${encodeURIComponent(courseCode)}`,
-        {
-          method: "GET",
-        },
-      );
-
-      if (!courseResponse.ok) {
-        throw new Error("Failed to fetch course");
-      }
-
-      const courseData: { courses: Course[] } = await courseResponse.json();
-
-      if (courseData.courses.length === 0) {
-        throw new Error("Course not found");
-      }
-
-      const courseID = courseData.courses[0].id;
-
-      const res = await authFetch(`/syllabus/list?courseID=${encodeURIComponent(courseID)}`, {
-        method: "GET",
-      });
-
-      return (await res.json()) as CourseData;
-    },
-    staleTime: 60 * 60 * 1000, // 1 hour
+    ...courseQuery(courseCode!),
+    enabled: !!courseCode,
   });
 
   function openPDFModal(link: string, title: string) {
@@ -80,20 +45,46 @@ const CoursePage = () => {
       >
         <PDFViewer url={currentPDFLink} />
       </Modal>
+      {!isLoading && isError && (
+        <Title order={3} ta="center" mb="xl">
+          Unable to load this course. Please try again later.
+        </Title>
+      )}
+
+      {!isLoading && !isError && data === null && (
+        <>
+          <Title order={2} ta="center" mb="xl">
+            Error 404: <br />
+          </Title>
+          <Title order={3} ta="center" mt="xl">
+            No course with catalog code {courseCode} has been recorded. <br />
+            Please check the URL to make sure you entered the correct value, or use the search bar
+            to find the course you're looking for.
+          </Title>
+        </>
+      )}
+
       {!isLoading && !isError && data && (
         <>
           <Title order={1} mt="md" mb="xl" ta="center">
             <b style={{ color: "var(--cwrublue)" }}>{formatCourseCode(data.code)}</b>: {data.name}
           </Title>
           <Stack w="100%" gap="xs">
-            {data.semesters.map((semester) => (
-              <CourseSemester
-                key={semester.semester}
-                semester={semester.semester}
-                syllabi={semester.syllabi}
-                openPDFModal={openPDFModal}
-              />
-            ))}
+            {data.semesters.length === 0 ||
+            data.semesters.every((semester) => semester.syllabi.length === 0) ? (
+              <Title order={3} ta="center">
+                No syllabi have been uploaded for this course yet.
+              </Title>
+            ) : (
+              data.semesters.map((semester) => (
+                <CourseSemester
+                  key={semester.semester}
+                  semester={semester.semester}
+                  syllabi={semester.syllabi}
+                  openPDFModal={openPDFModal}
+                />
+              ))
+            )}
           </Stack>
         </>
       )}

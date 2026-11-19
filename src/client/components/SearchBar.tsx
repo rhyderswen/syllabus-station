@@ -3,7 +3,7 @@ import { useImperativeHandle, useRef, useState, useEffect } from "react";
 import { Course } from "~/types";
 import { formatCourseCode } from "../util/textFormatting";
 
-const MIN_SEARCH_LENGTH = 2;
+const MIN_SEARCH_LENGTH = 1;
 
 export interface SearchBarHandle {
   clear: () => void;
@@ -15,9 +15,10 @@ export interface SearchBarProps {
   onChange?: (value: string) => void;
   placeholder?: string;
   ref?: React.Ref<SearchBarHandle>;
+  isAuthenticated: boolean;
 }
 
-function SearchBar({ onSubmit, onChange, placeholder, ref }: SearchBarProps) {
+function SearchBar({ onSubmit, onChange, placeholder, ref, isAuthenticated }: SearchBarProps) {
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
@@ -39,7 +40,7 @@ function SearchBar({ onSubmit, onChange, placeholder, ref }: SearchBarProps) {
   }));
 
   useEffect(() => {
-    if (searchQuery.length < MIN_SEARCH_LENGTH) {
+    if (!isAuthenticated || searchQuery.length < MIN_SEARCH_LENGTH) {
       setCourses([]);
       setSearchPending(false);
       return;
@@ -78,7 +79,11 @@ function SearchBar({ onSubmit, onChange, placeholder, ref }: SearchBarProps) {
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [searchQuery]);
+  }, [searchQuery, isAuthenticated]);
+
+  useEffect(() => {
+    combobox.updateSelectedOptionIndex();
+  }, [courses]);
 
   const options = courses.map((course) => (
     <Combobox.Option
@@ -130,19 +135,6 @@ function SearchBar({ onSubmit, onChange, placeholder, ref }: SearchBarProps) {
           onClick={() => combobox.openDropdown()}
           onFocus={() => combobox.openDropdown()}
           onBlur={() => combobox.closeDropdown()}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault();
-
-              const selectedIndex = combobox.getSelectedOptionIndex();
-
-              if (selectedIndex !== -1) {
-                combobox.selectActiveOption();
-              } else if (courses.length > 0) {
-                selectCourse(courses[0]);
-              }
-            }
-          }}
           rightSection={
             searchPending ? (
               <Loader size={18} />
@@ -162,7 +154,9 @@ function SearchBar({ onSubmit, onChange, placeholder, ref }: SearchBarProps) {
 
       <Combobox.Dropdown hidden={!value.trim()}>
         <Combobox.Options mah={250} style={{ overflowY: "auto" }}>
-          {searchQuery.length < MIN_SEARCH_LENGTH ? (
+          {!isAuthenticated ? (
+            <Combobox.Empty>Must be logged in to search for courses.</Combobox.Empty>
+          ) : searchQuery.length < MIN_SEARCH_LENGTH ? (
             <Combobox.Empty>
               Enter at least {MIN_SEARCH_LENGTH} characters to search...
             </Combobox.Empty>
