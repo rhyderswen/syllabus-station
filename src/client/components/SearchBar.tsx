@@ -100,7 +100,7 @@ function SearchBar({ onSubmit, onChange, placeholder, ref }: SearchBarProps) {
   }
 
   function selectCourse(course: Course) {
-    setValue(course.catalogCode);
+    setValue(`${formatCourseCode(course.catalogCode)}: ${course.title}`);
     combobox.closeDropdown();
     onSubmit?.(course);
   }

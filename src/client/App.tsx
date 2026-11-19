@@ -1,7 +1,7 @@
 import Wrapper from "@/components/Wrapper";
 import Error from "@/pages/Error";
 import Home from "@/pages/Home";
-import { createBrowserRouter, Outlet, RouterProvider } from "react-router";
+import { createBrowserRouter, Outlet, RouterProvider, Navigate } from "react-router";
 import "./App.css";
 import CoursePage from "./pages/CoursePage";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -30,8 +30,7 @@ const router = createBrowserRouter([
         children: [
           {
             index: true, // matches exactly /course
-            element: <CoursePage />,
-            // element: <Navigate to="/" replace />,
+            element: <Navigate to="/" replace />,
           },
           {
             path: ":courseCode", // matches /course/:courseCode

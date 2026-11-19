@@ -7,6 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { CourseData } from "~/types";
 import { formatCourseCode } from "../util/textFormatting";
+import { useParams } from "react-router";
+import { Course } from "~/types";
 
 const TEMP_COURSE_ID = "f0bd28a7-ffb9-4015-a62f-9523b723e1f5";
 
@@ -14,14 +16,39 @@ const CoursePage = () => {
   const [currentPDFLink, setCurrentPDFLink] = useState("");
   const [currentPDFTitle, setCurrentPDFTitle] = useState("");
   const [pdfOpened, { open, close }] = useDisclosure(false);
+  const { courseCode } = useParams<{ courseCode: string }>();
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["course", TEMP_COURSE_ID],
+    queryKey: ["course", courseCode],
 
     queryFn: async () => {
-      const res = await authFetch(`/syllabus/list?courseID=${encodeURIComponent(TEMP_COURSE_ID)}`, {
+      if (!courseCode) {
+        throw new Error("Missing course code");
+      }
+
+      const courseResponse = await authFetch(
+        `/course/catalogCode?courseID=${encodeURIComponent(courseCode)}`,
+        {
+          method: "GET",
+        },
+      );
+
+      if (!courseResponse.ok) {
+        throw new Error("Failed to fetch course");
+      }
+
+      const courseData: { courses: Course[] } = await courseResponse.json();
+
+      if (courseData.courses.length === 0) {
+        throw new Error("Course not found");
+      }
+
+      const courseID = courseData.courses[0].id;
+
+      const res = await authFetch(`/syllabus/list?courseID=${encodeURIComponent(courseID)}`, {
         method: "GET",
       });
+
       return (await res.json()) as CourseData;
     },
     staleTime: 60 * 60 * 1000, // 1 hour
