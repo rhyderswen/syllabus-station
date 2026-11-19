@@ -21,40 +21,6 @@ const upload = multer({
   },
 });
 
-router.get("/get", async (req, res) => {
-  if (!req.user) return res.status(401).send("Unauthorized.");
-
-  const syllabusId = req.query.id as string;
-
-  if (!syllabusId) {
-    return res.status(400).send("Missing syllabus ID.");
-  }
-
-  try {
-    const syllabus = await prismaGlobal.syllabi.findUnique({
-      where: {
-        id: syllabusId,
-      },
-    });
-
-    if (!syllabus) {
-      return res.status(404).send("Syllabus not found.");
-    } else {
-      const command = new GetObjectCommand({
-        Bucket: "syllabus-station",
-        Key: `${syllabus.fileID}.pdf`,
-      });
-
-      const presigned = await getSignedUrl(S3Global, command, { expiresIn: 3600 });
-
-      res.send({ syllabus: syllabus, url: presigned });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Server error.");
-  }
-});
-
 router.get("/list", async (req, res) => {
   if (!req.user) return res.status(401).send("Unauthorized.");
 
@@ -87,7 +53,13 @@ router.get("/list", async (req, res) => {
       semesters: [],
     };
 
-    const groupedBySemester = syllabi.reduce(
+    let user = await prismaGlobal.user.findUnique({
+      where: {
+        id: (req.user as any).netId,
+      },
+    });
+
+    let groupedBySemester = syllabi.reduce(
       (acc, syllabus) => {
         const semester = syllabus.semester;
         if (!acc[semester]) {
@@ -118,6 +90,7 @@ router.get("/list", async (req, res) => {
                 pdfLink: presigned,
                 professor: syllabus.professor,
                 uploadDate: syllabus.uploadDate,
+                uploader: user?.isAdmin ? user.id : undefined,
               },
             ],
           });
@@ -127,10 +100,23 @@ router.get("/list", async (req, res) => {
             pdfLink: presigned,
             professor: syllabus.professor,
             uploadDate: syllabus.uploadDate,
+            uploader: user?.isAdmin ? user.id : undefined,
           });
         }
       }
     }
+
+    courseData.semesters.sort((a, b) => {
+      const semesterWeight: Record<string, number> = {
+        Spring: 1,
+        Summer: 2,
+        Fall: 3,
+      };
+      const [seasonA, yearA] = a.semester.split(" ");
+      const [seasonB, yearB] = b.semester.split(" ");
+
+      return Number(yearA) - Number(yearB) || semesterWeight[seasonA] - semesterWeight[seasonB];
+    });
 
     if (!syllabi) {
       return res.status(404).send("Syllabus not found.");
@@ -239,7 +225,7 @@ router.delete("/delete", async (req, res) => {
 
   if (!user || !user.isAdmin) return res.status(401).send("Unauthorized.");
 
-  const fileId = req.query.fileId;
+  const fileId = req.query.fileId as string;
   if (!fileId) return res.status(400).send("Invalid request.");
 
   const request = new DeleteObjectCommand({

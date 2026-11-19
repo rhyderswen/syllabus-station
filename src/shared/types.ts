@@ -11,6 +11,7 @@ export interface SemesterData {
     pdfLink: string;
     professor: string;
     uploadDate: string;
+    uploader: string | undefined;
   }[];
 }
 
