@@ -5,5 +5,25 @@ export function formatCourseCode(courseCode: string): string {
     return courseCode;
   }
 
-  return `${match[1]} ${match[2]}`;
+  return `${match[1].toUpperCase()} ${match[2]}`;
+}
+
+export function capitalizeFirstLetter(value: string): string {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return "";
+  }
+
+  return trimmed.charAt(0).toLocaleUpperCase() + trimmed.slice(1);
+}
+
+export function formatInstructorName(name: string): string {
+  return name
+    .trim()
+    .toLocaleLowerCase()
+    .replace(
+      /(^|[\s'-])(\p{L})/gu,
+      (_, separator, letter) => separator + letter.toLocaleUpperCase(),
+    );
 }

@@ -1,21 +1,95 @@
 import { authFetch, queryClient } from "@/util/api";
-import { Box, Button, Group, Paper, Select, Text, TextInput } from "@mantine/core";
+import { Box, Button, Group, Paper, Select, Text } from "@mantine/core";
 import { YearPickerInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { IconFile, IconUpload, IconX } from "@tabler/icons-react";
 import { useMutation } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useDropzone } from "react-dropzone";
+import { useCallback, useState } from "react";
+import FormSearchBar, { SearchOption } from "./FormSearchBar";
+import { Course } from "~/types";
+import {
+  formatCourseCode,
+  capitalizeFirstLetter,
+  formatInstructorName,
+} from "../util/textFormatting";
+import { catalogCodeRegex } from "~/types";
 
 interface SyllabusUploadProps {
   onClose: () => void;
+}
+
+function parseCourseTitle(value: string) {
+  const match = value.trim().match(/^([A-Za-z]{4}\s?\d{1,4}[A-Za-z]?)\s*:?\s+(.+)$/);
+
+  if (!match || !catalogCodeRegex.test(match[1])) {
+    return null;
+  }
+
+  return {
+    catalogCode: formatCourseCode(match[1]),
+    title: match[2].trim(),
+  };
+}
+
+export async function searchCourses(query: string, signal: AbortSignal): Promise<SearchOption[]> {
+  const response = await fetch(`/course/search?query=${encodeURIComponent(query)}`, { signal });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch courses");
+  }
+
+  const data: { courses: Course[] } = await response.json();
+
+  return data.courses.map((course) => {
+    const courseTitle = `${formatCourseCode(course.catalogCode)}: ${course.title}`;
+
+    return {
+      value: courseTitle,
+      label: courseTitle,
+      catalogCode: course.catalogCode,
+      courseID: course.id,
+      title: course.title,
+    };
+  });
+}
+
+interface InstructorResponse {
+  instructors: {
+    professor: string;
+  }[];
+}
+
+export async function searchInstructors(
+  catalogCode: string,
+  query: string,
+  signal: AbortSignal,
+): Promise<SearchOption[]> {
+  const response = await fetch(
+    `/course/listInstructors?catalogCode=${encodeURIComponent(catalogCode)}`,
+    { signal },
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch instructors");
+  }
+
+  const data: InstructorResponse = await response.json();
+
+  return data.instructors
+    .map(({ professor }) => ({
+      value: professor,
+      label: professor,
+    }))
+    .filter((instructor) => instructor.label.toLowerCase().includes(query.toLowerCase()));
 }
 
 const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
   const currentSemester = dayjs().month() < 5 ? "Spring" : dayjs().month() < 7 ? "Summer" : "Fall";
 
   const form = useForm({
-    mode: "uncontrolled",
+    mode: "controlled",
     initialValues: {
       courseID: "",
       instructor: "",
@@ -25,34 +99,59 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
     },
 
     validate: {
-      courseID: (value) => (value ? null : "Select a course"),
+      courseID: (value) => {
+        if (!value.trim()) {
+          return "Enter a course title";
+        }
+
+        if (!parseCourseTitle(value)) {
+          return 'Enter a valid course title (ex: "CSDS 395: Senior Project in Computer Science")';
+        }
+
+        return null;
+      },
       instructor: (value) => (value.trim() ? null : "Enter an instructor"),
       sem: (value) => (value ? null : "Select a semester"),
       file: (value) => (value ? null : "Upload a syllabus"),
     },
   });
 
-  interface UploadSyllabusInput {
-    file: File;
-    instructor: string;
-    semester: string;
-    courseID: string;
-  }
+  const [selectedCourse, setSelectedCourse] = useState<{
+    id: string;
+    catalogCode: string;
+    title: string;
+  } | null>(null);
+
+  const courseSearch = useCallback(
+    (query: string, signal: AbortSignal) => searchCourses(query, signal),
+    [],
+  );
+
+  const instructorSearch = useCallback(
+    (query: string, signal: AbortSignal) => {
+      if (!selectedCourse) {
+        return Promise.resolve([]);
+      }
+
+      return searchInstructors(selectedCourse.catalogCode, query, signal);
+    },
+    [selectedCourse],
+  );
 
   const submitSyllabusMutation = useMutation({
-    mutationFn: async (vals: UploadSyllabusInput) => {
-      const data = new FormData();
-      data.append("file", vals.file);
-      data.append("professor", vals.instructor.trim());
-      data.append("semester", vals.semester);
-      data.append("courseID", vals.courseID);
-
+    mutationFn: async (data: FormData) => {
       const res = await authFetch("/syllabus/upload", { method: "POST", body: data });
+
+      if (!res.ok) {
+        throw new Error("Failed to upload syllabus");
+      }
+
       return res.json();
     },
-    onSuccess: (_, variables) => {
+
+    onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["course", variables.courseID],
+        queryKey: ["course"],
       });
     },
   });
@@ -62,23 +161,52 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
       return;
     }
 
+    let courseID: string;
+    let catalogCode: string;
+    let title: string;
+
+    if (selectedCourse) {
+      // If the course already exists and was selected through the dropdown
+      courseID = selectedCourse.id;
+      catalogCode = selectedCourse.catalogCode;
+      title = selectedCourse.title;
+    } else {
+      // If the course doesn't exist and needs to be created, everything needs to be formatted appropriately
+      const parsedCourse = parseCourseTitle(values.courseID);
+
+      if (!parsedCourse) {
+        form.setFieldError("courseID", "Enter a valid course title");
+        return;
+      }
+
+      courseID = "NewCourse";
+      catalogCode = parsedCourse.catalogCode;
+      title = capitalizeFirstLetter(parsedCourse.title);
+    }
+
     const year = dayjs(values.year).format("YYYY");
     const semester = `${values.sem} ${year}`;
 
-    await submitSyllabusMutation.mutateAsync(
-      {
-        file: values.file,
-        instructor: values.instructor,
-        semester,
-        courseID: values.courseID,
+    const data = new FormData();
+
+    data.append("file", values.file);
+    data.append("professor", formatInstructorName(values.instructor));
+    data.append("semester", semester);
+    data.append("courseID", courseID);
+    data.append("catalogCode", catalogCode);
+    data.append("title", title);
+
+    const uploadData = data;
+
+    console.log("Syllabus upload preview:", uploadData);
+
+    await submitSyllabusMutation.mutateAsync(data, {
+      onSuccess: () => {
+        onClose();
+        form.reset();
+        setSelectedCourse(null);
       },
-      {
-        onSuccess: () => {
-          onClose();
-          form.reset();
-        },
-      },
-    );
+    });
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -86,7 +214,7 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
       "application/pdf": [".pdf"],
     },
     maxFiles: 1,
-    maxSize: 10 * 1024 * 1024, // 10 MB, this can be changed if we think it's too small/big
+    maxSize: 10 * 1024 * 1024, // 10 MB
     multiple: false,
 
     onDrop: (acceptedFiles) => {
@@ -111,42 +239,43 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
 
   return (
     <Box component="form" onSubmit={form.onSubmit(handleSubmit)}>
-      {
-        // TODO: add "loading" prop to course title and instructor lookup during API calls
-      }
-      <Select
+      <FormSearchBar
         label="Course Title"
-        placeholder="Select a Course"
-        data={[
-          {
-            value: "f0bd28a7-ffb9-4015-a62f-9523b723e1f5",
-            label: "CSDS 132: Introduction to Java",
-          },
-          {
-            value: "4c255eb2-f434-47f5-a59c-16e45c098a56",
-            label: "CSDS 395: Senior Project in Computer Science",
-          },
-          {
-            value: "fa4db26a-be1b-4738-93f0-79b119ae2f33",
-            label: "MATH 121: Calculus for Science and Engineering I",
-          },
-        ]}
-        searchable
+        placeholder="Enter a Course"
         required
-        openOnFocus={false}
-        key={form.key("courseID")}
-        {...form.getInputProps("courseID")}
+        value={form.values.courseID}
+        onChange={(value) => {
+          if (selectedCourse && value !== form.values.courseID) {
+            form.setFieldValue("instructor", "");
+          }
+
+          form.setFieldValue("courseID", value);
+          setSelectedCourse(null);
+        }}
+        onSelect={(option) => {
+          if (option.courseID && option.catalogCode && option.title) {
+            setSelectedCourse({
+              id: option.courseID,
+              catalogCode: option.catalogCode,
+              title: option.title,
+            });
+          }
+        }}
+        search={courseSearch}
+        error={form.errors.courseID}
       />
 
-      {
-        // Instructor input should use fuzzy search for already-known instructors but allow manual input
-      }
-      <TextInput
+      <FormSearchBar
         label="Instructor Name"
-        placeholder="Enter Instructor's Name"
+        placeholder="Enter an Instructor's Name"
         required
-        key={form.key("instructor")}
-        {...form.getInputProps("instructor")}
+        value={form.values.instructor}
+        onChange={(value) => {
+          form.setFieldValue("instructor", value);
+        }}
+        search={instructorSearch}
+        searchEnabled={selectedCourse !== null}
+        error={form.errors.instructor}
       />
 
       <Group grow align="flex-start">
@@ -156,7 +285,6 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
           data={["Spring", "Summer", "Fall"]}
           searchable
           required
-          key={form.key("sem")}
           {...form.getInputProps("sem")}
         />
 
@@ -180,7 +308,6 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
           ]}
           minDate={new Date(1826, 1)}
           maxDate={dayjs().add(1, "year").startOf("year").format("YYYY-MM-DD")}
-          key={form.key("year")}
           {...form.getInputProps("year")}
           styles={{
             input: {
