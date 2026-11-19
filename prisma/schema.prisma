@@ -30,20 +30,20 @@ model RefreshToken {
 
 model Course {
   id          String    @id @default(uuid())
-  title       String
+  title       String    @db.VarChar(150)
   catalogCode String
   syllabi     Syllabi[]
 }
 
 model Syllabi {
   id         String   @id @default(uuid())
-  professor  String
+  professor  String   @db.VarChar(64)
   semester   String
   courseID   String
   course     Course   @relation(fields: [courseID], references: [id])
   fileID     String
   uploadDate DateTime
-  uploader   String
-  filename   String
+  uploader   String   @db.VarChar(100)
+  filename   String   @db.VarChar(150)
   user       User     @relation(fields: [uploader], references: [id])
 }
