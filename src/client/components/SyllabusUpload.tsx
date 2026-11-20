@@ -9,11 +9,7 @@ import { useDropzone } from "react-dropzone";
 import { useCallback, useState } from "react";
 import FormSearchBar, { SearchOption } from "./FormSearchBar";
 import { Course } from "~/types";
-import {
-  formatCourseCode,
-  capitalizeFirstLetter,
-  formatInstructorName,
-} from "../util/textFormatting";
+import { formatCourseCode, formatName } from "~/textFormatting";
 import { catalogCodeRegex } from "~/types";
 
 interface SyllabusUploadProps {
@@ -202,7 +198,7 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
         );
 
         if (!courseResponse.ok) {
-          throw new Error("Failed to check for duplicate courses");
+          form.setFieldError("courseID", "Failed to check for duplicate courses. Please try again");
         }
 
         const courseData: { courses: Course[] } = await courseResponse.json();
@@ -223,7 +219,7 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
 
       courseID = "NewCourse";
       catalogCode = parsedCourse.catalogCode;
-      title = capitalizeFirstLetter(parsedCourse.title);
+      title = formatName(parsedCourse.title);
     }
 
     const year = dayjs(values.year).format("YYYY");
@@ -232,7 +228,7 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
     const data = new FormData();
 
     data.append("file", values.file);
-    data.append("professor", formatInstructorName(values.instructor));
+    data.append("professor", formatName(values.instructor));
     data.append("semester", semester);
     data.append("courseID", courseID);
     data.append("catalogCode", catalogCode);

@@ -12,6 +12,8 @@ import "./App.css";
 import CoursePage from "./pages/CoursePage";
 import { AuthProvider } from "./contexts/AuthContext";
 import { queryClient, courseQuery } from "./util/api";
+import { parseCourseCodeFromURL } from "../shared/textFormatting";
+import { redirect } from "react-router";
 
 function Layout() {
   return (
@@ -24,7 +26,9 @@ function Layout() {
 }
 
 async function courseLoader({ params }: LoaderFunctionArgs) {
-  return queryClient.ensureQueryData(courseQuery(params.courseCode!));
+  const courseCode = parseCourseCodeFromURL(params.courseCode!);
+
+  return queryClient.ensureQueryData(courseQuery(courseCode));
 }
 
 const router = createBrowserRouter([

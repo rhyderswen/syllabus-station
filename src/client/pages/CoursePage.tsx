@@ -5,7 +5,7 @@ import { Container, Modal, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { formatCourseCode } from "../util/textFormatting";
+import { formatCourseCode, parseCourseCodeFromURL } from "~/textFormatting";
 import { useParams } from "react-router";
 
 const CoursePage = () => {
@@ -13,10 +13,11 @@ const CoursePage = () => {
   const [currentPDFTitle, setCurrentPDFTitle] = useState("");
   const [pdfOpened, { open, close }] = useDisclosure(false);
   const { courseCode } = useParams<{ courseCode: string }>();
+  const requestCourseCode = parseCourseCodeFromURL(courseCode!);
 
   const { data, isLoading, isError } = useQuery({
-    ...courseQuery(courseCode!),
-    enabled: !!courseCode,
+    ...courseQuery(requestCourseCode!),
+    enabled: !!requestCourseCode,
   });
 
   function openPDFModal(link: string, title: string) {

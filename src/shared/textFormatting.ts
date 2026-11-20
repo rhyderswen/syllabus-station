@@ -8,17 +8,7 @@ export function formatCourseCode(courseCode: string): string {
   return `${match[1].toUpperCase()} ${match[2]}`;
 }
 
-export function capitalizeFirstLetter(value: string): string {
-  const trimmed = value.trim();
-
-  if (!trimmed) {
-    return "";
-  }
-
-  return trimmed.charAt(0).toLocaleUpperCase() + trimmed.slice(1);
-}
-
-export function formatInstructorName(name: string): string {
+export function formatName(name: string): string {
   return name
     .trim()
     .toLocaleLowerCase()
@@ -26,4 +16,12 @@ export function formatInstructorName(name: string): string {
       /(^|[\s'-])(\p{L})/gu,
       (_, separator, letter) => separator + letter.toLocaleUpperCase(),
     );
+}
+
+export function formatCourseCodeForURL(courseCode: string): string {
+  return courseCode.trim().replace(/\s+/g, "_");
+}
+
+export function parseCourseCodeFromURL(courseCode: string): string {
+  return courseCode.replace(/_/g, " ");
 }

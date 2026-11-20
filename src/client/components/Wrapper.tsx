@@ -1,10 +1,11 @@
 import SyllabusStationLogo from "@/assets/SyllabusStation-full-rounded.png";
-import { Autocomplete, Box, Button, Container, Group, Modal, List } from "@mantine/core";
+import { Box, Button, Container, Group, Modal, List } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Link, useNavigate } from "react-router";
 import SyllabusUpload from "./SyllabusUpload";
 import { useAuth } from "../contexts/AuthContext";
 import SearchBar from "../components/SearchBar";
+import { formatCourseCodeForURL } from "~/textFormatting";
 
 export interface WrapperProps {
   children: React.ReactNode;
@@ -44,7 +45,7 @@ const Wrapper = ({ children }: WrapperProps) => {
             <SearchBar
               placeholder="Search for a course..."
               onSubmit={(course) => {
-                navigate(`/course/${course.catalogCode}`);
+                navigate(`/course/${formatCourseCodeForURL(course.catalogCode)}`);
               }}
               isAuthenticated={isAuthenticated}
             />

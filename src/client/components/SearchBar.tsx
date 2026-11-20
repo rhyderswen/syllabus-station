@@ -1,7 +1,7 @@
 import { CloseButton, Combobox, Loader, TextInput, useCombobox } from "@mantine/core";
 import { useImperativeHandle, useRef, useState, useEffect } from "react";
 import { Course } from "~/types";
-import { formatCourseCode } from "../util/textFormatting";
+import { formatCourseCode } from "~/textFormatting";
 
 const MIN_SEARCH_LENGTH = 1;
 
