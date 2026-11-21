@@ -1,16 +1,22 @@
-import { authFetch, queryClient } from "@/util/api";
+import {
+  authFetch,
+  queryClient,
+  courseSearchQuery,
+  instructorSearchQuery,
+  courseByCatalogCodeQuery,
+} from "@/util/api";
 import { Box, Button, Group, Paper, Select, Text } from "@mantine/core";
 import { YearPickerInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { IconFile, IconUpload, IconX } from "@tabler/icons-react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useDropzone } from "react-dropzone";
-import { useCallback, useState } from "react";
-import FormSearchBar, { SearchOption } from "./FormSearchBar";
-import { Course } from "~/types";
+import { useState } from "react";
+import FormSearchBar from "./FormSearchBar";
 import { formatCourseCode, formatName } from "~/textFormatting";
 import { catalogCodeRegex } from "~/types";
+import { useDebouncedValue } from "@mantine/hooks";
 
 interface SyllabusUploadProps {
   onClose: () => void;
@@ -27,58 +33,6 @@ function parseCourseTitle(value: string) {
     catalogCode: formatCourseCode(match[1]),
     title: match[2].trim(),
   };
-}
-
-export async function searchCourses(query: string, signal: AbortSignal): Promise<SearchOption[]> {
-  const response = await fetch(`/course/search?query=${encodeURIComponent(query)}`, { signal });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch courses");
-  }
-
-  const data: { courses: Course[] } = await response.json();
-
-  return data.courses.map((course) => {
-    const courseTitle = `${formatCourseCode(course.catalogCode)}: ${course.title}`;
-
-    return {
-      value: courseTitle,
-      label: courseTitle,
-      catalogCode: course.catalogCode,
-      courseID: course.id,
-      title: course.title,
-    };
-  });
-}
-
-interface InstructorResponse {
-  instructors: {
-    professor: string;
-  }[];
-}
-
-export async function searchInstructors(
-  catalogCode: string,
-  query: string,
-  signal: AbortSignal,
-): Promise<SearchOption[]> {
-  const response = await fetch(
-    `/course/listInstructors?catalogCode=${encodeURIComponent(catalogCode)}`,
-    { signal },
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch instructors");
-  }
-
-  const data: InstructorResponse = await response.json();
-
-  return data.instructors
-    .map(({ professor }) => ({
-      value: professor,
-      label: professor,
-    }))
-    .filter((instructor) => instructor.label.toLowerCase().includes(query.toLowerCase()));
 }
 
 const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
@@ -132,21 +86,48 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
     title: string;
   } | null>(null);
 
-  const courseSearch = useCallback(
-    (query: string, signal: AbortSignal) => searchCourses(query, signal),
-    [],
-  );
+  const courseSearchValue = form.values.courseID.trim().replace(/:/g, "");
 
-  const instructorSearch = useCallback(
-    (query: string, signal: AbortSignal) => {
-      if (!selectedCourse) {
-        return Promise.resolve([]);
-      }
+  const [debouncedCourseSearch] = useDebouncedValue(courseSearchValue, 300);
 
-      return searchInstructors(selectedCourse.catalogCode, query, signal);
-    },
-    [selectedCourse],
-  );
+  const { data: courseOptions = [], isFetching: isCourseFetching } = useQuery({
+    ...courseSearchQuery(debouncedCourseSearch),
+
+    enabled: debouncedCourseSearch.length >= 1,
+
+    select: (courses) =>
+      courses.map((course) => {
+        const courseTitle = `${formatCourseCode(course.catalogCode)}: ${course.title}`;
+
+        return {
+          value: courseTitle,
+          label: courseTitle,
+          catalogCode: course.catalogCode,
+          courseID: course.id,
+          title: course.title,
+        };
+      }),
+  });
+
+  const courseSearchPending = courseSearchValue !== debouncedCourseSearch || isCourseFetching;
+
+  const instructorSearchValue = form.values.instructor.trim();
+
+  const [debouncedInstructorSearch] = useDebouncedValue(instructorSearchValue, 300);
+
+  const { data: instructorOptions = [], isFetching: isInstructorFetching } = useQuery({
+    ...instructorSearchQuery(selectedCourse?.catalogCode ?? ""),
+
+    enabled: selectedCourse !== null,
+
+    select: (instructors) =>
+      instructors.filter((instructor) =>
+        instructor.label.toLowerCase().includes(debouncedInstructorSearch.toLowerCase()),
+      ),
+  });
+
+  const instructorSearchPending =
+    instructorSearchValue !== debouncedInstructorSearch || isInstructorFetching;
 
   const submitSyllabusMutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -190,20 +171,11 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
       }
 
       try {
-        const courseResponse = await authFetch(
-          `/course/catalogCode?courseID=${encodeURIComponent(parsedCourse.catalogCode)}`,
-          {
-            method: "GET",
-          },
+        const existingCourses = await queryClient.fetchQuery(
+          courseByCatalogCodeQuery(parsedCourse.catalogCode),
         );
 
-        if (!courseResponse.ok) {
-          form.setFieldError("courseID", "Failed to check for duplicate courses. Please try again");
-        }
-
-        const courseData: { courses: Course[] } = await courseResponse.json();
-
-        if (courseData.courses.length > 0) {
+        if (existingCourses.length > 0) {
           form.setFieldError(
             "courseID",
             "A course with this course ID already exists. Either select it from the search results or correct this value.",
@@ -299,7 +271,8 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
             });
           }
         }}
-        search={courseSearch}
+        options={courseOptions}
+        isLoading={courseSearchPending}
         error={form.errors.courseID}
         maxLength={150}
       />
@@ -312,7 +285,8 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
         onChange={(value) => {
           form.setFieldValue("instructor", value);
         }}
-        search={instructorSearch}
+        options={instructorOptions}
+        isLoading={instructorSearchPending}
         searchEnabled={selectedCourse !== null}
         error={form.errors.instructor}
         maxLength={60}

@@ -58,7 +58,7 @@ const CoursePage = () => {
             Error 404: <br />
           </Title>
           <Title order={3} ta="center" mt="xl">
-            No course with catalog code {courseCode} has been recorded. <br />
+            No course with catalog code '{requestCourseCode}' has been recorded. <br />
             Please check the URL to make sure you entered the correct value, or use the search bar
             to find the course you're looking for.
           </Title>

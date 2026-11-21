@@ -2,6 +2,9 @@ import { CloseButton, Combobox, Loader, TextInput, useCombobox } from "@mantine/
 import { useImperativeHandle, useRef, useState, useEffect } from "react";
 import { Course } from "~/types";
 import { formatCourseCode } from "~/textFormatting";
+import { useQuery } from "@tanstack/react-query";
+import { useDebouncedValue } from "@mantine/hooks";
+import { courseSearchQuery } from "@/util/api";
 
 const MIN_SEARCH_LENGTH = 1;
 
@@ -24,62 +27,25 @@ function SearchBar({ onSubmit, onChange, placeholder, ref, isAuthenticated }: Se
   });
   const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState("");
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [searchPending, setSearchPending] = useState(false);
 
   const searchQuery = value.trim().replace(/:/g, "");
+  const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 300);
+
+  const { data: courses = [], isFetching } = useQuery({
+    ...courseSearchQuery(debouncedSearchQuery),
+    enabled: isAuthenticated && debouncedSearchQuery.length >= MIN_SEARCH_LENGTH,
+  });
+
+  const searchPending = searchQuery !== debouncedSearchQuery || isFetching;
 
   useImperativeHandle(ref, () => ({
     clear: () => {
       setValue("");
-      setCourses([]);
     },
     setValue: (value: string) => {
       setValue(value);
     },
   }));
-
-  useEffect(() => {
-    if (!isAuthenticated || searchQuery.length < MIN_SEARCH_LENGTH) {
-      setCourses([]);
-      setSearchPending(false);
-      return;
-    }
-
-    const controller = new AbortController();
-
-    setSearchPending(true);
-
-    const timeout = setTimeout(async () => {
-      try {
-        const response = await fetch(`/course/search?query=${encodeURIComponent(searchQuery)}`, {
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch courses");
-        }
-
-        const data: { courses: Course[] } = await response.json();
-
-        setCourses(data.courses);
-      } catch (error) {
-        if (error instanceof Error && error.name !== "AbortError") {
-          console.error(error);
-          setCourses([]);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setSearchPending(false);
-        }
-      }
-    }, 300);
-
-    return () => {
-      clearTimeout(timeout);
-      controller.abort();
-    };
-  }, [searchQuery, isAuthenticated]);
 
   useEffect(() => {
     combobox.updateSelectedOptionIndex();

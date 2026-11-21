@@ -3,8 +3,8 @@ import { Box, Button, Container, Group, Modal, List } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Link, useNavigate } from "react-router";
 import SyllabusUpload from "./SyllabusUpload";
-import { useAuth } from "../contexts/AuthContext";
-import SearchBar from "../components/SearchBar";
+import { useAuth } from "@/contexts/AuthContext";
+import SearchBar from "@/components/SearchBar";
 import { formatCourseCodeForURL } from "~/textFormatting";
 
 export interface WrapperProps {

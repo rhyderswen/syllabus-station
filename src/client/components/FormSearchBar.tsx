@@ -1,5 +1,5 @@
 import { CloseButton, Combobox, Loader, TextInput, useCombobox } from "@mantine/core";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export interface SearchOption {
   value: string;
@@ -15,7 +15,8 @@ export interface FormSearchBarProps {
   value: string;
   onChange: (value: string) => void;
   onSelect?: (option: SearchOption) => void;
-  search: (query: string, signal: AbortSignal) => Promise<SearchOption[]>;
+  options: SearchOption[];
+  isLoading: boolean;
   disabled?: boolean;
   required?: boolean;
   error?: React.ReactNode;
@@ -30,7 +31,8 @@ function FormSearchBar({
   value,
   onChange,
   onSelect,
-  search,
+  options,
+  isLoading,
   disabled = false,
   required = false,
   error,
@@ -41,46 +43,8 @@ function FormSearchBar({
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
-  const [options, setOptions] = useState<SearchOption[]>([]);
-  const [searchPending, setSearchPending] = useState(false);
 
   const searchQuery = value.trim().replace(/:/g, "");
-
-  useEffect(() => {
-    if (!searchEnabled || disabled || searchQuery.length < minSearchLength) {
-      setOptions([]);
-      setSearchPending(false);
-      return;
-    }
-
-    const controller = new AbortController();
-
-    setSearchPending(true);
-
-    const timeout = setTimeout(async () => {
-      try {
-        const results = await search(searchQuery, controller.signal);
-
-        if (!controller.signal.aborted) {
-          setOptions(results);
-        }
-      } catch (error) {
-        if (error instanceof Error && error.name !== "AbortError") {
-          console.error(error);
-          setOptions([]);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setSearchPending(false);
-        }
-      }
-    }, 300);
-
-    return () => {
-      clearTimeout(timeout);
-      controller.abort();
-    };
-  }, [searchQuery, search, disabled, minSearchLength, searchEnabled]);
 
   useEffect(() => {
     combobox.updateSelectedOptionIndex();
@@ -123,7 +87,7 @@ function FormSearchBar({
           onFocus={() => combobox.openDropdown()}
           onBlur={() => combobox.closeDropdown()}
           rightSection={
-            searchPending ? (
+            isLoading ? (
               <Loader size={18} />
             ) : value ? (
               <CloseButton
@@ -153,9 +117,9 @@ function FormSearchBar({
                 </Combobox.Option>
               ))}
 
-              {searchPending && <Combobox.Empty>Searching...</Combobox.Empty>}
+              {isLoading && <Combobox.Empty>Searching...</Combobox.Empty>}
 
-              {!searchPending && options.length === 0 && (
+              {!isLoading && options.length === 0 && (
                 <Combobox.Empty>No results found. You can enter your own value.</Combobox.Empty>
               )}
             </>

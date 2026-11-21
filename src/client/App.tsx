@@ -1,6 +1,7 @@
 import Wrapper from "@/components/Wrapper";
 import Error from "@/pages/Error";
 import Home from "@/pages/Home";
+import CoursePage from "@/pages/CoursePage";
 import {
   createBrowserRouter,
   Outlet,
@@ -8,12 +9,10 @@ import {
   Navigate,
   type LoaderFunctionArgs,
 } from "react-router";
-import "./App.css";
-import CoursePage from "./pages/CoursePage";
-import { AuthProvider } from "./contexts/AuthContext";
-import { queryClient, courseQuery } from "./util/api";
-import { parseCourseCodeFromURL } from "../shared/textFormatting";
-import { redirect } from "react-router";
+import "@/App.css";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { queryClient, courseQuery } from "@/util/api";
+import { parseCourseCodeFromURL } from "~/textFormatting";
 
 function Layout() {
   return (
@@ -51,6 +50,7 @@ const router = createBrowserRouter([
             path: ":courseCode", // matches /course/:courseCode
             element: <CoursePage />,
             loader: courseLoader,
+            errorElement: <Navigate to="/" replace />,
           },
         ],
       },

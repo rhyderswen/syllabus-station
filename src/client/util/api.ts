@@ -73,10 +73,6 @@ export function courseQuery(courseCode: string) {
         },
       );
 
-      if (!courseResponse.ok) {
-        throw new Error("Failed to fetch course");
-      }
-
       const courseData: { courses: Course[] } = await courseResponse.json();
 
       if (courseData.courses.length === 0) {
@@ -97,5 +93,68 @@ export function courseQuery(courseCode: string) {
     },
 
     staleTime: 60 * 60 * 1000, // 1 hour
+  });
+}
+
+export function courseSearchQuery(query: string) {
+  return queryOptions({
+    queryKey: ["course", "search", query],
+
+    queryFn: async ({ signal }) => {
+      const response = await authFetch(`/course/search?query=${encodeURIComponent(query)}`, {
+        signal,
+      });
+
+      const data: { courses: Course[] } = await response.json();
+
+      return data.courses;
+    },
+
+    staleTime: 30 * 1000,
+  });
+}
+
+export function instructorSearchQuery(catalogCode: string) {
+  return queryOptions({
+    queryKey: ["course", "instructors", catalogCode],
+
+    queryFn: async ({ signal }) => {
+      const response = await authFetch(
+        `/course/listInstructors?catalogCode=${encodeURIComponent(catalogCode)}`,
+        {
+          signal,
+        },
+      );
+
+      const data: { instructors: { professor: string }[] } = await response.json();
+
+      return data.instructors.map(({ professor }) => ({
+        value: professor,
+        label: professor,
+      }));
+    },
+
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function courseByCatalogCodeQuery(catalogCode: string) {
+  return queryOptions({
+    queryKey: ["course", "catalogCode", catalogCode],
+
+    queryFn: async () => {
+      const response = await authFetch(
+        `/course/catalogCode?courseID=${encodeURIComponent(catalogCode)}`,
+        {
+          method: "GET",
+        },
+      );
+
+      const data: { courses: Course[] } = await response.json();
+
+      return data.courses;
+    },
+
+    staleTime: 0,
   });
 }
