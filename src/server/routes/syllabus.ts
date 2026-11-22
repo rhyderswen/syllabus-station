@@ -58,6 +58,14 @@ router.get("/get", async (req, res) => {
 router.get("/list", async (req, res) => {
   if (!req.user) return res.status(401).send("Unauthorized.");
 
+  const user = await prismaGlobal.user.findUnique({
+    where: {
+      id: (req.user as any).netId,
+    },
+  });
+
+  const isAdmin = user?.isAdmin;
+
   const courseID = req.query.courseID as string;
 
   if (!courseID) {
@@ -118,6 +126,7 @@ router.get("/list", async (req, res) => {
                 pdfLink: presigned,
                 professor: syllabus.professor,
                 uploadDate: syllabus.uploadDate,
+                uploader: isAdmin ? syllabus.uploader : "",
               },
             ],
           });
@@ -127,6 +136,7 @@ router.get("/list", async (req, res) => {
             pdfLink: presigned,
             professor: syllabus.professor,
             uploadDate: syllabus.uploadDate,
+            uploader: isAdmin ? syllabus.uploader : "",
           });
         }
       }

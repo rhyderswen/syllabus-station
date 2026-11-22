@@ -8,6 +8,7 @@ import ViteExpress from "vite-express";
 import authRouter from "./routes/auth.js";
 import syllabusRouter from "./routes/syllabus.js";
 import courseRouter from "./routes/course.js";
+import userRouter from "./routes/ban.js";
 
 import * as fs from "node:fs";
 import path from "node:path";
@@ -35,6 +36,7 @@ app.use((req, res, next) => {
 app.use("/", authRouter);
 app.use("/syllabus", syllabusRouter);
 app.use("/course", courseRouter);
+app.use("/user", userRouter);
 
 app.get("/hello", (_, res) => {
   res.send("Hello Vite + React + TypeScript!");
