@@ -55,7 +55,7 @@ const CoursePage = () => {
       {!isLoading && !isError && data === null && (
         <>
           <Title order={2} ta="center" mb="xl">
-            Error 404: <br />
+            Error 404 <br />
           </Title>
           <Title order={3} ta="center" mt="xl">
             No course with catalog code '{requestCourseCode}' has been recorded. <br />

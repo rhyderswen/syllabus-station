@@ -8,7 +8,7 @@ import {
 import { Box, Button, Group, Paper, Select, Text } from "@mantine/core";
 import { YearPickerInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
-import { IconFile, IconUpload, IconX } from "@tabler/icons-react";
+import { FileIcon, UploadSimpleIcon, XIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useDropzone } from "react-dropzone";
@@ -343,7 +343,7 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
           <Paper withBorder p="md" radius="md">
             <Group justify="space-between" wrap="nowrap">
               <Group gap="sm" wrap="nowrap">
-                <IconFile size={24} />
+                <FileIcon size={24} />
 
                 <Box>
                   <Text size="sm" fw={500} lineClamp={1}>
@@ -366,7 +366,7 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
                   form.clearFieldError("file");
                 }}
               >
-                <IconX size={16} />
+                <XIcon size={16} />
               </Button>
             </Group>
           </Paper>
@@ -382,7 +382,7 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
           >
             <input {...getInputProps()} />
 
-            <IconUpload size={50} stroke={2} style={{ marginBottom: 8 }} />
+            <UploadSimpleIcon size={50} style={{ marginBottom: 8 }} />
 
             <Text size="sm" fw={500}>
               {isDragActive
