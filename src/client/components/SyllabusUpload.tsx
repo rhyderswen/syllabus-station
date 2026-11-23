@@ -1,21 +1,45 @@
-import { authFetch, queryClient } from "@/util/api";
-import { Box, Button, Group, Paper, Select, Text, TextInput } from "@mantine/core";
+import {
+  authFetch,
+  queryClient,
+  courseSearchQuery,
+  instructorSearchQuery,
+  courseByCatalogCodeQuery,
+} from "@/util/api";
+import { Box, Button, Group, Paper, Select, Text } from "@mantine/core";
 import { YearPickerInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
-import { IconFile, IconUpload, IconX } from "@tabler/icons-react";
-import { useMutation } from "@tanstack/react-query";
+import { FileIcon, UploadSimpleIcon, XIcon } from "@phosphor-icons/react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useDropzone } from "react-dropzone";
+import { useState } from "react";
+import FormSearchBar from "./FormSearchBar";
+import { formatCourseCode, formatName } from "~/textFormatting";
+import { catalogCodeRegex } from "~/types";
+import { useDebouncedValue } from "@mantine/hooks";
 
 interface SyllabusUploadProps {
   onClose: () => void;
+}
+
+function parseCourseTitle(value: string) {
+  const match = value.trim().match(/^([A-Za-z]{4}\s?\d{1,4}[A-Za-z]?)\s*:?\s+(.+)$/);
+
+  if (!match || !catalogCodeRegex.test(match[1])) {
+    return null;
+  }
+
+  return {
+    catalogCode: formatCourseCode(match[1]),
+    title: match[2].trim(),
+  };
 }
 
 const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
   const currentSemester = dayjs().month() < 5 ? "Spring" : dayjs().month() < 7 ? "Summer" : "Fall";
 
   const form = useForm({
-    mode: "uncontrolled",
+    mode: "controlled",
     initialValues: {
       courseID: "",
       instructor: "",
@@ -25,34 +49,100 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
     },
 
     validate: {
-      courseID: (value) => (value ? null : "Select a course"),
-      instructor: (value) => (value.trim() ? null : "Enter an instructor"),
+      courseID: (value) => {
+        if (!value.trim()) {
+          return "Enter a course title";
+        }
+
+        if (value.length > 150) {
+          return "Course title cannot exceed 150 characters";
+        }
+
+        if (!parseCourseTitle(value)) {
+          return 'Enter a valid course title (ex: "CSDS 395: Senior Project in Computer Science")';
+        }
+
+        return null;
+      },
+      instructor: (value) => {
+        if (!value.trim()) {
+          return "Enter an instructor";
+        }
+
+        if (value.length > 60) {
+          return "Instructor name cannot exceed 60 characters";
+        }
+
+        return null;
+      },
       sem: (value) => (value ? null : "Select a semester"),
       file: (value) => (value ? null : "Upload a syllabus"),
     },
   });
 
-  interface UploadSyllabusInput {
-    file: File;
-    instructor: string;
-    semester: string;
-    courseID: string;
-  }
+  const [selectedCourse, setSelectedCourse] = useState<{
+    id: string;
+    catalogCode: string;
+    title: string;
+  } | null>(null);
+
+  const courseSearchValue = form.values.courseID.trim().replace(/:/g, "");
+
+  const [debouncedCourseSearch] = useDebouncedValue(courseSearchValue, 300);
+
+  const { data: courseOptions = [], isFetching: isCourseFetching } = useQuery({
+    ...courseSearchQuery(debouncedCourseSearch),
+
+    enabled: debouncedCourseSearch.length >= 1,
+
+    select: (courses) =>
+      courses.map((course) => {
+        const courseTitle = `${formatCourseCode(course.catalogCode)}: ${course.title}`;
+
+        return {
+          value: courseTitle,
+          label: courseTitle,
+          catalogCode: course.catalogCode,
+          courseID: course.id,
+          title: course.title,
+        };
+      }),
+  });
+
+  const courseSearchPending = courseSearchValue !== debouncedCourseSearch || isCourseFetching;
+
+  const instructorSearchValue = form.values.instructor.trim();
+
+  const [debouncedInstructorSearch] = useDebouncedValue(instructorSearchValue, 300);
+
+  const { data: instructorOptions = [], isFetching: isInstructorFetching } = useQuery({
+    ...instructorSearchQuery(selectedCourse?.catalogCode ?? ""),
+
+    enabled: selectedCourse !== null,
+
+    select: (instructors) =>
+      instructors.filter((instructor) =>
+        instructor.label.toLowerCase().includes(debouncedInstructorSearch.toLowerCase()),
+      ),
+  });
+
+  const instructorSearchPending =
+    instructorSearchValue !== debouncedInstructorSearch || isInstructorFetching;
 
   const submitSyllabusMutation = useMutation({
-    mutationFn: async (vals: UploadSyllabusInput) => {
-      const data = new FormData();
-      data.append("file", vals.file);
-      data.append("professor", vals.instructor.trim());
-      data.append("semester", vals.semester);
-      data.append("courseID", vals.courseID);
-
+    mutationFn: async (data: FormData) => {
       const res = await authFetch("/syllabus/upload", { method: "POST", body: data });
+
+      if (!res.ok) {
+        throw new Error("Failed to upload syllabus");
+      }
+
       return res.json();
     },
-    onSuccess: (_, variables) => {
+
+    onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["course", variables.courseID],
+        queryKey: ["course"],
       });
     },
   });
@@ -62,23 +152,71 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
       return;
     }
 
+    let courseID: string;
+    let catalogCode: string;
+    let title: string;
+
+    if (selectedCourse) {
+      // If the course already exists and was selected through the dropdown
+      courseID = selectedCourse.id;
+      catalogCode = selectedCourse.catalogCode;
+      title = selectedCourse.title;
+    } else {
+      // If the course doesn't exist and needs to be created, everything needs to be formatted appropriately
+      const parsedCourse = parseCourseTitle(values.courseID);
+
+      if (!parsedCourse) {
+        form.setFieldError("courseID", "Enter a valid course title");
+        return;
+      }
+
+      try {
+        const existingCourses = await queryClient.fetchQuery(
+          courseByCatalogCodeQuery(parsedCourse.catalogCode),
+        );
+
+        if (existingCourses.length > 0) {
+          form.setFieldError(
+            "courseID",
+            "A course with this course ID already exists. Either select it from the search results or correct this value.",
+          );
+          return;
+        }
+      } catch (error) {
+        console.error(error);
+
+        form.setFieldError("courseID", "Unable to verify course existence. Please try again.");
+        return;
+      }
+
+      courseID = "NewCourse";
+      catalogCode = parsedCourse.catalogCode;
+      title = formatName(parsedCourse.title);
+    }
+
     const year = dayjs(values.year).format("YYYY");
     const semester = `${values.sem} ${year}`;
 
-    await submitSyllabusMutation.mutateAsync(
-      {
-        file: values.file,
-        instructor: values.instructor,
-        semester,
-        courseID: values.courseID,
+    const data = new FormData();
+
+    data.append("file", values.file);
+    data.append("professor", formatName(values.instructor));
+    data.append("semester", semester);
+    data.append("courseID", courseID);
+    data.append("catalogCode", catalogCode);
+    data.append("title", title);
+
+    const uploadData = data;
+
+    console.log("Syllabus upload preview:", uploadData);
+
+    await submitSyllabusMutation.mutateAsync(data, {
+      onSuccess: () => {
+        onClose();
+        form.reset();
+        setSelectedCourse(null);
       },
-      {
-        onSuccess: () => {
-          onClose();
-          form.reset();
-        },
-      },
-    );
+    });
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -86,7 +224,7 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
       "application/pdf": [".pdf"],
     },
     maxFiles: 1,
-    maxSize: 10 * 1024 * 1024, // 10 MB, this can be changed if we think it's too small/big
+    maxSize: 10 * 1024 * 1024, // 10 MB
     multiple: false,
 
     onDrop: (acceptedFiles) => {
@@ -111,42 +249,47 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
 
   return (
     <Box component="form" onSubmit={form.onSubmit(handleSubmit)}>
-      {
-        // TODO: add "loading" prop to course title and instructor lookup during API calls
-      }
-      <Select
+      <FormSearchBar
         label="Course Title"
-        placeholder="Select a Course"
-        data={[
-          {
-            value: "f0bd28a7-ffb9-4015-a62f-9523b723e1f5",
-            label: "CSDS 132: Introduction to Java",
-          },
-          {
-            value: "4c255eb2-f434-47f5-a59c-16e45c098a56",
-            label: "CSDS 395: Senior Project in Computer Science",
-          },
-          {
-            value: "fa4db26a-be1b-4738-93f0-79b119ae2f33",
-            label: "MATH 121: Calculus for Science and Engineering I",
-          },
-        ]}
-        searchable
+        placeholder="Enter a Course"
         required
-        openOnFocus={false}
-        key={form.key("courseID")}
-        {...form.getInputProps("courseID")}
+        value={form.values.courseID}
+        onChange={(value) => {
+          if (selectedCourse && value !== form.values.courseID) {
+            form.setFieldValue("instructor", "");
+          }
+
+          form.setFieldValue("courseID", value);
+          setSelectedCourse(null);
+        }}
+        onSelect={(option) => {
+          if (option.courseID && option.catalogCode && option.title) {
+            setSelectedCourse({
+              id: option.courseID,
+              catalogCode: option.catalogCode,
+              title: option.title,
+            });
+          }
+        }}
+        options={courseOptions}
+        isLoading={courseSearchPending}
+        error={form.errors.courseID}
+        maxLength={150}
       />
 
-      {
-        // Instructor input should use fuzzy search for already-known instructors but allow manual input
-      }
-      <TextInput
+      <FormSearchBar
         label="Instructor Name"
-        placeholder="Enter Instructor's Name"
+        placeholder="Enter an Instructor's Name"
         required
-        key={form.key("instructor")}
-        {...form.getInputProps("instructor")}
+        value={form.values.instructor}
+        onChange={(value) => {
+          form.setFieldValue("instructor", value);
+        }}
+        options={instructorOptions}
+        isLoading={instructorSearchPending}
+        searchEnabled={selectedCourse !== null}
+        error={form.errors.instructor}
+        maxLength={60}
       />
 
       <Group grow align="flex-start">
@@ -156,7 +299,6 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
           data={["Spring", "Summer", "Fall"]}
           searchable
           required
-          key={form.key("sem")}
           {...form.getInputProps("sem")}
         />
 
@@ -180,7 +322,6 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
           ]}
           minDate={new Date(1826, 1)}
           maxDate={dayjs().add(1, "year").startOf("year").format("YYYY-MM-DD")}
-          key={form.key("year")}
           {...form.getInputProps("year")}
           styles={{
             input: {
@@ -202,7 +343,7 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
           <Paper withBorder p="md" radius="md">
             <Group justify="space-between" wrap="nowrap">
               <Group gap="sm" wrap="nowrap">
-                <IconFile size={24} />
+                <FileIcon size={24} />
 
                 <Box>
                   <Text size="sm" fw={500} lineClamp={1}>
@@ -225,7 +366,7 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
                   form.clearFieldError("file");
                 }}
               >
-                <IconX size={16} />
+                <XIcon size={16} />
               </Button>
             </Group>
           </Paper>
@@ -241,7 +382,7 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
           >
             <input {...getInputProps()} />
 
-            <IconUpload size={50} stroke={2} style={{ marginBottom: 8 }} />
+            <UploadSimpleIcon size={50} style={{ marginBottom: 8 }} />
 
             <Text size="sm" fw={500}>
               {isDragActive

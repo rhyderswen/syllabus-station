@@ -1,9 +1,11 @@
-import SyllabusStationLogo from "@/assets/SyllabusStation-full.png"; // placeholder to figure out spacing
-import { Autocomplete, Box, Button, Container, Group, Modal, List } from "@mantine/core";
+import SyllabusStationLogo from "@/assets/SyllabusStation-full-rounded.png";
+import { Box, Button, Container, Group, Modal, List } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import SyllabusUpload from "./SyllabusUpload";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
+import SearchBar from "@/components/SearchBar";
+import { formatCourseCodeForURL } from "~/textFormatting";
 
 export interface WrapperProps {
   children: React.ReactNode;
@@ -12,6 +14,7 @@ export interface WrapperProps {
 const Wrapper = ({ children }: WrapperProps) => {
   const [opened, { open, close }] = useDisclosure(false);
   const { isAuthenticated, status } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <>
@@ -39,18 +42,12 @@ const Wrapper = ({ children }: WrapperProps) => {
                 <img src={SyllabusStationLogo} alt="Syllabus Station Logo" height={60} />
               </Link>
             </div>
-            <Autocomplete
-              flex={1}
-              miw={0}
+            <SearchBar
               placeholder="Search for a course..."
-              data={[
-                "CSDS 132: Introduction to Java",
-                "CSDS 233: Data Structures",
-                "CSDS 393: Software Engineering",
-                "CSDS 395: Senior Project in Computer Science",
-              ]}
-              //rightSection={loading ? <Loader size={16} /> : null} // This will be used later for a loading circle to appear on the right edge of the search bar while searching
-              // TODO: make it so search bar and upload button are only available when logged in
+              onSubmit={(course) => {
+                navigate(`/course/${formatCourseCodeForURL(course.catalogCode)}`);
+              }}
+              isAuthenticated={isAuthenticated}
             />
             <Button
               fz={14}
@@ -60,7 +57,7 @@ const Wrapper = ({ children }: WrapperProps) => {
                 if (isAuthenticated) {
                   open();
                 } else {
-                  window.open("/login", "_blank");
+                  window.open("/login", "_parent");
                 }
               }}
             >
@@ -80,14 +77,9 @@ const Wrapper = ({ children }: WrapperProps) => {
                     Github
                   </Link>
                 </List.Item>
-                <List.Item>
-                  <Link to="/" target="_blank">
-                    Another Related link
-                  </Link>
-                </List.Item>
                 {isAuthenticated ? (
                   <List.Item>
-                    <Link to="/logout" target="_blank">
+                    <Link to="/logout" target="_parent">
                       Log Out
                     </Link>
                   </List.Item>

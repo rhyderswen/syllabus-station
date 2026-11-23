@@ -1,7 +1,7 @@
 import LoggedInHome from "./LoggedInHome";
 import LoggedOutHome from "./LoggedOutHome";
-import { Container } from "@mantine/core";
-import { useAuth } from "../contexts/AuthContext";
+import { Container, Loader } from "@mantine/core";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Home = () => {
   const { isAuthenticated, status } = useAuth();
@@ -9,11 +9,11 @@ const Home = () => {
   if (status === "loading") {
     return (
       <Container className="home" p="xl" ta="center">
-        Checking authentication...
+        Checking authentication... <s />
+        <Loader size={18} />
       </Container>
     );
   }
-  // TODO: Loader circle for this ^
 
   return <>{isAuthenticated ? <LoggedInHome /> : <LoggedOutHome />}</>;
 };
