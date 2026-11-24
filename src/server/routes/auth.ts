@@ -27,8 +27,8 @@ passport.use(
 );
 
 router.get("/login", passport.authenticate("cas", { session: false }), async (req, res) => {
-  if (!req.user) {
-    return res.status(401).send("Authentication failed");
+  if (!req.user || !(req.user as any).netId) {
+    return res.status(401).send("Authentication failed. Try again.");
   }
 
   if (!(await prismaGlobal.user.findUnique({ where: { id: (req.user as any).netId } }))) {
@@ -39,6 +39,12 @@ router.get("/login", passport.authenticate("cas", { session: false }), async (re
         isBanned: false,
       },
     });
+  }
+
+  const user = await prismaGlobal.user.findUnique({ where: { id: (req.user as any).netId } });
+
+  if (!user) {
+    return res.status(500).send("Authentication failed. Try again.");
   }
 
   const userPayload = { netId: (req.user as any).netId };
@@ -61,21 +67,21 @@ router.get("/login", passport.authenticate("cas", { session: false }), async (re
   await prismaGlobal.refreshToken.create({
     data: {
       token: refreshToken,
-      userId: (req.user as any).netId,
+      userId: user.id,
       expiresAt: new Date(Date.now() + refreshTokenTTLms),
+    },
+  });
+
+  await prismaGlobal.accessLog.create({
+    data: {
+      userId: user.id,
+      ipAddress: req.ip as string,
+      accessTime: new Date(),
     },
   });
 
   res.redirect("/");
 });
-
-router.post(
-  "/login/password",
-  passport.authenticate("local", {
-    successRedirect: "/",
-    failureRedirect: "/login",
-  }),
-);
 
 router.get("/auth/checkAuth", (req, res) => {
   if (!req.user) {

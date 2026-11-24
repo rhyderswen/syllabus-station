@@ -17,6 +17,7 @@ model User {
   isBanned      Boolean
   syllabi       Syllabi[]
   refreshTokens RefreshToken[]
+  accessLogs    AccessLog[]
 }
 
 model RefreshToken {
@@ -46,4 +47,12 @@ model Syllabi {
   uploader   String
   filename   String
   user       User     @relation(fields: [uploader], references: [id])
+}
+
+model AccessLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  ipAddress  String
+  accessTime DateTime
 }
