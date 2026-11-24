@@ -249,7 +249,7 @@ router.delete("/delete", async (req, res) => {
 
   if (!user || !user.isAdmin) return res.status(401).send("Unauthorized.");
 
-  const fileId = req.query.fileId;
+  const fileId = req.query.fileId as string;
   if (!fileId) return res.status(400).send("Invalid request.");
 
   const request = new DeleteObjectCommand({
