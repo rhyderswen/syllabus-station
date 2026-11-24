@@ -12,7 +12,7 @@ router.patch("/ban", async (req, res) => {
   try {
     const user = await prismaGlobal.user.findUnique({
       where: {
-        id: (req.user as any).netID,
+        id: (req.user as any).netId,
       },
     });
 

@@ -60,7 +60,7 @@ router.get("/list", async (req, res) => {
 
   const user = await prismaGlobal.user.findUnique({
     where: {
-      id: (req.user as any).netID,
+      id: (req.user as any).netId,
     },
   });
 
