@@ -1,10 +1,18 @@
 import Wrapper from "@/components/Wrapper";
 import Error from "@/pages/Error";
 import Home from "@/pages/Home";
-import { createBrowserRouter, Outlet, RouterProvider } from "react-router";
-import "./App.css";
-import CoursePage from "./pages/CoursePage";
-import { AuthProvider } from "./contexts/AuthContext";
+import CoursePage from "@/pages/CoursePage";
+import {
+  createBrowserRouter,
+  Outlet,
+  RouterProvider,
+  Navigate,
+  type LoaderFunctionArgs,
+} from "react-router";
+import "@/App.css";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { queryClient, courseQuery } from "@/util/api";
+import { parseCourseCodeFromURL } from "~/textFormatting";
 
 function Layout() {
   return (
@@ -14,6 +22,12 @@ function Layout() {
       </Wrapper>
     </AuthProvider>
   );
+}
+
+async function courseLoader({ params }: LoaderFunctionArgs) {
+  const courseCode = parseCourseCodeFromURL(params.courseCode!);
+
+  return queryClient.ensureQueryData(courseQuery(courseCode));
 }
 
 const router = createBrowserRouter([
@@ -30,12 +44,13 @@ const router = createBrowserRouter([
         children: [
           {
             index: true, // matches exactly /course
-            element: <CoursePage />,
-            // element: <Navigate to="/" replace />,
+            element: <Navigate to="/" replace />,
           },
           {
             path: ":courseCode", // matches /course/:courseCode
             element: <CoursePage />,
+            loader: courseLoader,
+            errorElement: <Navigate to="/" replace />,
           },
         ],
       },

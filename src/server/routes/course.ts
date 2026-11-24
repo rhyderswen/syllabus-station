@@ -22,7 +22,7 @@ router.get("/search", async (req, res) => {
     }
 
     const sortedCourses = fuzzysort
-      .go(courseSearch, courses, { keys: ["catalogCode", "title"] })
+      .go(courseSearch, courses, { keys: ["catalogCode", "title"], threshold: 0, limit: 10 })
       .map((result) => result.obj);
 
     res.send({ courses: sortedCourses });
