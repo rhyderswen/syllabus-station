@@ -32,7 +32,7 @@ async function main() {
     update: {},
     create: {
       id: "f0bd28a7-ffb9-4015-a62f-9523b723e1f5",
-      title: "Introduction to Java",
+      title: "Programming in Java",
       catalogCode: "CSDS 132",
     },
   });
