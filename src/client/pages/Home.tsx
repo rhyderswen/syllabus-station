@@ -1,9 +1,19 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { Container, Loader } from "@mantine/core";
 import LoggedInHome from "./LoggedInHome";
 import LoggedOutHome from "./LoggedOutHome";
 
 const Home = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, status } = useAuth();
+
+  if (status === "loading") {
+    return (
+      <Container className="home" p="xl" ta="center">
+        Checking authentication... <s />
+        <Loader size={18} />
+      </Container>
+    );
+  }
 
   return <>{isAuthenticated ? <LoggedInHome /> : <LoggedOutHome />}</>;
 };
