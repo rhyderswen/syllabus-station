@@ -1,11 +1,11 @@
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import express from "express";
 import multer, { memoryStorage } from "multer";
-import { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { randomUUID } from "crypto";
 import { prismaGlobal } from "~/sharedDb";
 import { S3Global } from "~/sharedS3";
-import { randomUUID } from "crypto";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { catalogCodeRegex, CourseData } from "~/types";
 
 let router = express.Router();
@@ -29,6 +29,8 @@ router.get("/list", async (req, res) => {
       id: (req.user as any).netId,
     },
   });
+
+  if (!user || user.isBanned) return res.status(401).send("Unauthorized.");
 
   const isAdmin = user?.isAdmin;
 

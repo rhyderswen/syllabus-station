@@ -1,16 +1,16 @@
 import CourseSemester from "@/components/CourseSemester";
 import PDFViewer from "@/components/PDFViewer";
 import { courseQuery } from "@/util/api";
-import { Container, Modal, Stack, Title } from "@mantine/core";
+import { Container, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { formatCourseCode, parseCourseCodeFromURL } from "~/textFormatting";
 import { useParams } from "react-router";
+import { formatCourseCode, parseCourseCodeFromURL } from "~/textFormatting";
+import { SyllabusData } from "~/types";
 
 const CoursePage = () => {
-  const [currentPDFLink, setCurrentPDFLink] = useState("");
-  const [currentPDFTitle, setCurrentPDFTitle] = useState("");
+  const [selectedSyllabus, setSelectedSyllabus] = useState<SyllabusData | undefined>(undefined);
   const [pdfOpened, { open, close }] = useDisclosure(false);
   const { courseCode } = useParams<{ courseCode: string }>();
   const requestCourseCode = parseCourseCodeFromURL(courseCode!);
@@ -20,32 +20,14 @@ const CoursePage = () => {
     enabled: !!requestCourseCode,
   });
 
-  function openPDFModal(link: string, title: string) {
-    setCurrentPDFLink(link);
-    setCurrentPDFTitle(title);
+  function openPDFModal(syllabus: SyllabusData) {
+    setSelectedSyllabus(syllabus);
     open();
   }
 
   return (
     <Container className="course" p="md" w="100%">
-      <Modal
-        opened={pdfOpened}
-        onClose={close}
-        title={currentPDFTitle}
-        size="auto"
-        centered
-        overlayProps={{
-          color: "#000",
-          backgroundOpacity: 0.55,
-          blur: 3,
-        }}
-        styles={{
-          content: { backgroundColor: "var(--cwrugray)" },
-          header: { backgroundColor: "var(--cwrugray)" },
-        }}
-      >
-        <PDFViewer url={currentPDFLink} />
-      </Modal>
+      <PDFViewer opened={pdfOpened} close={close} syllabus={selectedSyllabus} />
       {!isLoading && isError && (
         <Title order={3} ta="center" mb="xl">
           Unable to load this course. Please try again later.

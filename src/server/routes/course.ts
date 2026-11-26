@@ -8,6 +8,13 @@ let router = express.Router();
 router.get("/search", async (req, res) => {
   if (!req.user) return res.status(401).send("Unauthorized.");
 
+  let user = await prismaGlobal.user.findUnique({
+    where: {
+      id: (req.user as any).netId,
+    },
+  });
+  if (!user || user.isBanned) return res.status(401).send("Unauthorized.");
+
   const courseSearch = req.query.query as string;
 
   if (!courseSearch) {
@@ -35,6 +42,13 @@ router.get("/search", async (req, res) => {
 router.get("/catalogCode", async (req, res) => {
   if (!req.user) return res.status(401).send("Unauthorized.");
 
+  let user = await prismaGlobal.user.findUnique({
+    where: {
+      id: (req.user as any).netId,
+    },
+  });
+  if (!user || user.isBanned) return res.status(401).send("Unauthorized.");
+
   const courseSearch = req.query.courseID as string;
 
   if (!courseSearch) {
@@ -59,6 +73,13 @@ router.get("/catalogCode", async (req, res) => {
 
 router.get("/listInstructors", async (req, res) => {
   if (!req.user) return res.status(401).send("Unauthorized.");
+
+  let user = await prismaGlobal.user.findUnique({
+    where: {
+      id: (req.user as any).netId,
+    },
+  });
+  if (!user || user.isBanned) return res.status(401).send("Unauthorized.");
 
   const course = req.query.catalogCode as string;
 

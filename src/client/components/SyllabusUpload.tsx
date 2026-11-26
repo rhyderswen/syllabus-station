@@ -1,22 +1,22 @@
 import {
   authFetch,
-  queryClient,
+  courseByCatalogCodeQuery,
   courseSearchQuery,
   instructorSearchQuery,
-  courseByCatalogCodeQuery,
+  queryClient,
 } from "@/util/api";
 import { Box, Button, Group, Paper, Select, Text } from "@mantine/core";
 import { YearPickerInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
+import { useDebouncedValue } from "@mantine/hooks";
 import { FileIcon, UploadSimpleIcon, XIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { useDropzone } from "react-dropzone";
 import { useState } from "react";
-import FormSearchBar from "./FormSearchBar";
+import { useDropzone } from "react-dropzone";
 import { formatCourseCode, formatName } from "~/textFormatting";
 import { catalogCodeRegex } from "~/types";
-import { useDebouncedValue } from "@mantine/hooks";
+import FormSearchBar from "./FormSearchBar";
 
 interface SyllabusUploadProps {
   onClose: () => void;

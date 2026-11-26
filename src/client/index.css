@@ -14,6 +14,7 @@
   --cwrutrueblue: #007ab8;
   --link: #646cff;
   --link-hover: #747bff;
+  --danger: #d63d1f;
 }
 
 :focus:not(:focus-visible) {

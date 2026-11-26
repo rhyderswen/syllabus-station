@@ -6,27 +6,41 @@ type AuthStatus = "loading" | "authenticated" | "unauthenticated" | "error";
 
 interface AuthContextValue {
   isAuthenticated: boolean;
+  isAdmin: boolean;
+  isBanned: boolean;
   status: AuthStatus;
   checkAuth: () => Promise<void>;
+}
+
+interface UserPermissions {
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+  isBanned: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const {
-    data: isAuth,
+    data: userPermissions,
     isPending,
     isError,
     refetch,
   } = useQuery({
     queryKey: ["auth"],
-    queryFn: async () => {
+    queryFn: async (): Promise<UserPermissions> => {
       try {
-        await authFetch("/auth/checkAuth", { method: "GET" });
-        return true;
+        const resp = await authFetch("/auth/checkAuth", { method: "GET" });
+        const json = await resp.json();
+        return {
+          isAuthenticated: resp.ok,
+          isAdmin: json.isAdmin || false,
+          isBanned: json.isBanned || false,
+        };
       } catch (error) {
         // 401 is not logged in, not an error
-        if (error instanceof ApiError && error.status === 401) return false;
+        if (error instanceof ApiError && error.status === 401)
+          return { isAuthenticated: false, isAdmin: false, isBanned: false };
         throw error;
       }
     },
@@ -38,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ? "loading"
     : isError
       ? "error"
-      : isAuth
+      : userPermissions?.isAuthenticated
         ? "authenticated"
         : "unauthenticated";
 
@@ -48,11 +62,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
-      isAuthenticated: status === "authenticated",
+      isAuthenticated: userPermissions?.isAuthenticated || false,
+      isAdmin: userPermissions?.isAdmin || false,
+      isBanned: userPermissions?.isBanned || false,
       status,
       checkAuth,
     }),
-    [status, checkAuth],
+    [userPermissions, status, checkAuth],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
