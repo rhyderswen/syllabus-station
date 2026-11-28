@@ -1,5 +1,5 @@
 import { QueryClient, queryOptions } from "@tanstack/react-query";
-import { CourseData, Course } from "~/types";
+import { Course, CourseData } from "~/types";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -89,7 +89,7 @@ export function courseQuery(courseCode: string) {
         throw new Error("Failed to fetch syllabi");
       }
 
-      return (await response.json()) as CourseData;
+      return { id: courseID, ...(await response.json()) } as CourseData;
     },
 
     staleTime: 60 * 60 * 1000, // 1 hour

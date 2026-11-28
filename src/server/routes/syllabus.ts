@@ -58,6 +58,7 @@ router.get("/list", async (req, res) => {
     }
 
     let courseData: CourseData = {
+      id: courseInfo.id,
       name: courseInfo.title,
       code: courseInfo.catalogCode,
       semesters: [],
@@ -90,6 +91,7 @@ router.get("/list", async (req, res) => {
             semester: semester,
             syllabi: [
               {
+                id: syllabus.id,
                 filename: `${syllabus.filename}`,
                 pdfLink: presigned,
                 professor: syllabus.professor,
@@ -100,6 +102,7 @@ router.get("/list", async (req, res) => {
           });
         } else {
           courseData.semesters[semesterIndex].syllabi.push({
+            id: syllabus.id,
             filename: `${syllabus.filename}`,
             pdfLink: presigned,
             professor: syllabus.professor,

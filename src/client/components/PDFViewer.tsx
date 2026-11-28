@@ -1,5 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { authFetch, queryClient } from "@/util/api";
+import { addToasts } from "@/util/feedback";
 import { Box, Group, Loader, Modal, Text, Toolbar } from "@mantine/core";
 import { useIntersection } from "@mantine/hooks";
 import {
@@ -80,8 +81,9 @@ const PDFViewer = ({ opened, close, syllabus }: PDFViewerProps) => {
   const { isAdmin } = useAuth();
 
   function deleteSyllabus() {
+    if (!syllabus?.id) return;
     if (window.confirm("Are you sure you want to delete this syllabus?")) {
-      deleteSyllabusMutation.mutate(""); // TODO: syllabus.id not yet exposed
+      addToasts(deleteSyllabusMutation.mutateAsync(syllabus.id));
     }
   }
 
@@ -95,7 +97,7 @@ const PDFViewer = ({ opened, close, syllabus }: PDFViewerProps) => {
         throw new Error("Failed to delete syllabus");
       }
 
-      return res.json();
+      return res;
     },
 
     onSuccess: () => {
@@ -109,7 +111,7 @@ const PDFViewer = ({ opened, close, syllabus }: PDFViewerProps) => {
   function banUser() {
     if (!syllabus?.uploader) return;
     if (window.confirm("Are you sure you want to ban this user?")) {
-      banUserMutation.mutate(syllabus.uploader);
+      addToasts(banUserMutation.mutateAsync(syllabus.uploader));
     }
   }
 
@@ -121,7 +123,7 @@ const PDFViewer = ({ opened, close, syllabus }: PDFViewerProps) => {
         throw new Error("Failed to ban user");
       }
 
-      return res.json();
+      return res;
     },
   });
 

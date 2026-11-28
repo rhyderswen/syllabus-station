@@ -1,4 +1,5 @@
 export interface CourseData {
+  id: string;
   name: string;
   code: string;
   semesters: SemesterData[];
@@ -10,6 +11,7 @@ export interface SemesterData {
 }
 
 export interface SyllabusData {
+  id: string;
   filename: string;
   pdfLink: string;
   professor: string;

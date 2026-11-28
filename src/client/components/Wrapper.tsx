@@ -1,9 +1,10 @@
 import SyllabusStationLogo from "@/assets/SyllabusStation-full-rounded.png";
-import SearchBar from "@/components/SearchBar";
+import SearchBar, { SearchBarHandle } from "@/components/SearchBar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Box, Button, Container, Group, List, Modal } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Link, useNavigate } from "react-router";
+import { useEffect, useRef } from "react";
+import { Link, useLocation, useNavigate } from "react-router";
 import { formatCourseCodeForURL } from "~/textFormatting";
 import SyllabusUpload from "./SyllabusUpload";
 
@@ -14,7 +15,15 @@ export interface WrapperProps {
 const Wrapper = ({ children }: WrapperProps) => {
   const [opened, { open, close }] = useDisclosure(false);
   const { isAuthenticated, isBanned, isAdmin } = useAuth();
+  const searchBarRef = useRef<SearchBarHandle>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname === "/") {
+      searchBarRef.current?.clear();
+    }
+  }, [location.pathname]);
 
   return (
     <>
@@ -48,6 +57,7 @@ const Wrapper = ({ children }: WrapperProps) => {
               onSubmit={(course) => {
                 navigate(`/course/${formatCourseCodeForURL(course.catalogCode)}`);
               }}
+              ref={searchBarRef}
             />
             <Button
               fz={14}

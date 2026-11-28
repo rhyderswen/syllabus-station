@@ -1,10 +1,12 @@
 import {
   authFetch,
   courseByCatalogCodeQuery,
+  courseQuery,
   courseSearchQuery,
   instructorSearchQuery,
   queryClient,
 } from "@/util/api";
+import { addToasts } from "@/util/feedback";
 import { Box, Button, Group, Paper, Select, Text } from "@mantine/core";
 import { YearPickerInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
@@ -14,7 +16,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { formatCourseCode, formatName } from "~/textFormatting";
+import { useMatch } from "react-router";
+import { formatCourseCode, formatName, parseCourseCodeFromURL } from "~/textFormatting";
 import { catalogCodeRegex } from "~/types";
 import FormSearchBar from "./FormSearchBar";
 
@@ -38,11 +41,23 @@ function parseCourseTitle(value: string) {
 const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
   const currentSemester = dayjs().month() < 5 ? "Spring" : dayjs().month() < 7 ? "Summer" : "Fall";
 
+  const urlCode = useMatch("/course/:courseCode")?.params.courseCode;
+  const courseCode = urlCode ? (parseCourseCodeFromURL(urlCode) ?? "") : "";
+
+  const { data: currentCourse } = useQuery({
+    // Gets the current course if the user is on a course page (to autofill)
+    ...courseQuery(courseCode),
+    enabled: !!courseCode,
+    staleTime: Infinity,
+  });
+
   const form = useForm({
     mode: "controlled",
     initialValues: {
-      courseID: "",
-      instructor: "",
+      courseID: currentCourse
+        ? `${formatCourseCode(currentCourse.code)}: ${currentCourse.name}`
+        : "",
+      instructor: currentCourse ? (currentCourse.semesters[0]?.syllabi[0]?.professor ?? "") : "",
       sem: currentSemester,
       year: dayjs().startOf("year").format("YYYY-MM-DD"),
       file: null as File | null,
@@ -84,7 +99,11 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
     id: string;
     catalogCode: string;
     title: string;
-  } | null>(null);
+  } | null>(
+    currentCourse
+      ? { id: currentCourse.id, catalogCode: currentCourse.code, title: currentCourse.name }
+      : null,
+  );
 
   const courseSearchValue = form.values.courseID.trim().replace(/:/g, "");
 
@@ -210,13 +229,15 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
 
     console.log("Syllabus upload preview:", uploadData);
 
-    await submitSyllabusMutation.mutateAsync(data, {
-      onSuccess: () => {
-        onClose();
-        form.reset();
-        setSelectedCourse(null);
-      },
-    });
+    addToasts(
+      submitSyllabusMutation.mutateAsync(data, {
+        onSuccess: () => {
+          onClose();
+          form.reset();
+          setSelectedCourse(null);
+        },
+      }),
+    );
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -275,6 +296,8 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
         isLoading={courseSearchPending}
         error={form.errors.courseID}
         maxLength={150}
+        data-autofocus
+        dontOpenOnFirstFocus
       />
 
       <FormSearchBar
@@ -290,6 +313,7 @@ const SyllabusUpload = ({ onClose }: SyllabusUploadProps) => {
         searchEnabled={selectedCourse !== null}
         error={form.errors.instructor}
         maxLength={60}
+        minSearchLength={0}
       />
 
       <Group grow align="flex-start">
