@@ -1,11 +1,11 @@
 import SyllabusStationLogo from "@/assets/SyllabusStation-full-rounded.png";
-import { Box, Button, Container, Group, Modal, List } from "@mantine/core";
+import SearchBar from "@/components/SearchBar";
+import { useAuth } from "@/contexts/AuthContext";
+import { Box, Button, Container, Group, List, Modal } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Link, useNavigate } from "react-router";
-import SyllabusUpload from "./SyllabusUpload";
-import { useAuth } from "@/contexts/AuthContext";
-import SearchBar from "@/components/SearchBar";
 import { formatCourseCodeForURL } from "~/textFormatting";
+import SyllabusUpload from "./SyllabusUpload";
 
 export interface WrapperProps {
   children: React.ReactNode;
@@ -13,7 +13,7 @@ export interface WrapperProps {
 
 const Wrapper = ({ children }: WrapperProps) => {
   const [opened, { open, close }] = useDisclosure(false);
-  const { isAuthenticated, status } = useAuth();
+  const { isAuthenticated, isBanned, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -44,15 +44,16 @@ const Wrapper = ({ children }: WrapperProps) => {
             </div>
             <SearchBar
               placeholder="Search for a course..."
+              disabled={isBanned}
               onSubmit={(course) => {
                 navigate(`/course/${formatCourseCodeForURL(course.catalogCode)}`);
               }}
-              isAuthenticated={isAuthenticated}
             />
             <Button
               fz={14}
               bg="var(--cwrutrueblue)"
               flex="0 0 auto"
+              disabled={isBanned}
               onClick={() => {
                 if (isAuthenticated) {
                   open();
@@ -77,15 +78,14 @@ const Wrapper = ({ children }: WrapperProps) => {
                     Github
                   </Link>
                 </List.Item>
-                {isAuthenticated ? (
+                {isAuthenticated && (
                   <List.Item>
                     <Link to="/logout" target="_parent">
                       Log Out
                     </Link>
                   </List.Item>
-                ) : (
-                  <></>
                 )}
+                {isAdmin && <List.Item>Hi Admin!</List.Item>}
               </List>
             </Box>
             <Box flex={2}>

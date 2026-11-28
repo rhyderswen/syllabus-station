@@ -1,10 +1,18 @@
-import { CloseButton, Combobox, Loader, TextInput, useCombobox } from "@mantine/core";
-import { useImperativeHandle, useRef, useState, useEffect } from "react";
-import { Course } from "~/types";
-import { formatCourseCode } from "~/textFormatting";
-import { useQuery } from "@tanstack/react-query";
-import { useDebouncedValue } from "@mantine/hooks";
+import { useAuth } from "@/contexts/AuthContext";
 import { courseSearchQuery } from "@/util/api";
+import {
+  CloseButton,
+  Combobox,
+  Loader,
+  TextInput,
+  TextInputProps,
+  useCombobox,
+} from "@mantine/core";
+import { useDebouncedValue } from "@mantine/hooks";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useImperativeHandle, useRef, useState } from "react";
+import { formatCourseCode } from "~/textFormatting";
+import { Course } from "~/types";
 
 const MIN_SEARCH_LENGTH = 1;
 
@@ -13,20 +21,22 @@ export interface SearchBarHandle {
   setValue: (value: string) => void;
 }
 
-export interface SearchBarProps {
+export interface SearchBarProps extends Omit<
+  TextInputProps,
+  "onSubmit" | "onChange" | "value" | "defaultValue" | "ref"
+> {
   onSubmit?: (course: Course) => void;
   onChange?: (value: string) => void;
-  placeholder?: string;
   ref?: React.Ref<SearchBarHandle>;
-  isAuthenticated: boolean;
 }
 
-function SearchBar({ onSubmit, onChange, placeholder, ref, isAuthenticated }: SearchBarProps) {
+function SearchBar({ onSubmit, onChange, ref, ...textInputProps }: SearchBarProps) {
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
   const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState("");
+  const { isAuthenticated } = useAuth();
 
   const searchQuery = value.trim().replace(/:/g, "");
   const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 300);
@@ -94,7 +104,7 @@ function SearchBar({ onSubmit, onChange, placeholder, ref, isAuthenticated }: Se
           miw={0}
           ref={inputRef}
           value={value}
-          placeholder={placeholder}
+          {...textInputProps}
           onChange={(event) => {
             processOnChange(event.currentTarget.value);
           }}

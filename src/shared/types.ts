@@ -6,13 +6,15 @@ export interface CourseData {
 
 export interface SemesterData {
   semester: string;
-  syllabi: {
-    filename: string;
-    pdfLink: string;
-    professor: string;
-    uploadDate: string;
-    uploader: string;
-  }[];
+  syllabi: SyllabusData[];
+}
+
+export interface SyllabusData {
+  filename: string;
+  pdfLink: string;
+  professor: string;
+  uploadDate: string;
+  uploader: string;
 }
 
 // Information returned by search endpoint

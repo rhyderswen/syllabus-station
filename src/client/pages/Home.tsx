@@ -1,7 +1,7 @@
+import { useAuth } from "@/contexts/AuthContext";
+import { Container, Loader } from "@mantine/core";
 import LoggedInHome from "./LoggedInHome";
 import LoggedOutHome from "./LoggedOutHome";
-import { Container, Loader } from "@mantine/core";
-import { useAuth } from "@/contexts/AuthContext";
 
 const Home = () => {
   const { isAuthenticated, status } = useAuth();
