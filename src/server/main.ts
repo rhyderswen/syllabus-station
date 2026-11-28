@@ -19,6 +19,23 @@ const PORT = process.env.PORT || 3000;
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const FIFTEEN_MINUTES = 15 * 60 * 1000;
 
+app.use(cookieParser());
+
+app.use((req, res, next) => {
+  const token = req.cookies.token;
+  if (token) {
+    try {
+      const user = jwt.verify(token, process.env.JWT_SECRET!) as any;
+      req.user = user;
+    } catch (err) {
+      // Access token might be expired, clear it so frontend knows it needs refresh
+      res.clearCookie("token");
+      console.log("JWT token expired or invalid");
+    }
+  }
+  next();
+});
+
 const keyGenerator = (req: any, res: any) => {
   if (req.user) return req.user.netId;
   return ipKeyGenerator(req.ip);
@@ -40,7 +57,7 @@ const generalApiLimiter = rateLimit({
 
 const getSyllabiLimiter = rateLimit({
   windowMs: ONE_DAY,
-  max: 200,
+  max: 500,
   keyGenerator,
   message: "Too many requests from this IP/user, please try again later.",
 });
@@ -50,23 +67,6 @@ const uploadLimiter = rateLimit({
   max: 25,
   keyGenerator,
   message: "Too many requests from this IP/user, please try again later.",
-});
-
-app.use(cookieParser());
-
-app.use((req, res, next) => {
-  const token = req.cookies.token;
-  if (token) {
-    try {
-      const user = jwt.verify(token, process.env.JWT_SECRET!) as any;
-      req.user = user;
-    } catch (err) {
-      // Access token might be expired, clear it so frontend knows it needs refresh
-      res.clearCookie("token");
-      console.log("JWT token expired or invalid");
-    }
-  }
-  next();
 });
 
 app.use(generalAppLimiter);
