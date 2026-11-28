@@ -4,6 +4,7 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import https from "node:https";
 import ViteExpress from "vite-express";
+import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 
 import authRouter from "./routes/auth.js";
 import syllabusRouter from "./routes/syllabus.js";
@@ -15,6 +16,41 @@ import path from "node:path";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ONE_DAY = 24 * 60 * 60 * 1000;
+const FIFTEEN_MINUTES = 15 * 60 * 1000;
+
+const keyGenerator = (req: any, res: any) => {
+  if (req.user) return req.user.netId;
+  return ipKeyGenerator(req.ip);
+};
+
+const generalAppLimiter = rateLimit({
+  windowMs: FIFTEEN_MINUTES,
+  max: 1000,
+  keyGenerator,
+  message: "Too many requests from this IP/user, please try again later.",
+});
+
+const generalApiLimiter = rateLimit({
+  windowMs: FIFTEEN_MINUTES,
+  max: 300,
+  keyGenerator,
+  message: "Too many requests from this IP/user, please try again later.",
+});
+
+const getSyllabiLimiter = rateLimit({
+  windowMs: ONE_DAY,
+  max: 200,
+  keyGenerator,
+  message: "Too many requests from this IP/user, please try again later.",
+});
+
+const uploadLimiter = rateLimit({
+  windowMs: ONE_DAY,
+  max: 25,
+  keyGenerator,
+  message: "Too many requests from this IP/user, please try again later.",
+});
 
 app.use(cookieParser());
 
@@ -33,9 +69,20 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(generalAppLimiter);
+
+app.use("/login", generalApiLimiter);
+app.use("/logout", generalApiLimiter);
 app.use("/", authRouter);
+
+app.use("/syllabus/list", getSyllabiLimiter);
+app.use("/syllabus/upload", uploadLimiter);
 app.use("/syllabus", syllabusRouter);
+
+app.use("/course", generalApiLimiter);
 app.use("/course", courseRouter);
+
+app.use("/user", generalApiLimiter);
 app.use("/user", userRouter);
 
 app.get("/hello", (_, res) => {
