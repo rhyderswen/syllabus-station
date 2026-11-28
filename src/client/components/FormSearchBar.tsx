@@ -1,5 +1,12 @@
-import { CloseButton, Combobox, Loader, TextInput, useCombobox } from "@mantine/core";
-import { useEffect } from "react";
+import {
+  CloseButton,
+  Combobox,
+  Loader,
+  TextInput,
+  TextInputProps,
+  useCombobox,
+} from "@mantine/core";
+import { useEffect, useRef } from "react";
 
 export interface SearchOption {
   value: string;
@@ -9,37 +16,40 @@ export interface SearchOption {
   title?: string;
 }
 
-export interface FormSearchBarProps {
-  label: string;
-  placeholder?: string;
+export interface FormSearchBarProps extends Omit<TextInputProps, "onChange" | "onSelect" | "ref"> {
   value: string;
   onChange: (value: string) => void;
   onSelect?: (option: SearchOption) => void;
   options: SearchOption[];
   isLoading: boolean;
-  disabled?: boolean;
-  required?: boolean;
-  error?: React.ReactNode;
   minSearchLength?: number;
   searchEnabled?: boolean;
-  maxLength?: number;
+  dontOpenOnFirstFocus?: boolean;
 }
 
 function FormSearchBar({
-  label,
-  placeholder,
   value,
   onChange,
   onSelect,
   options,
   isLoading,
-  disabled = false,
-  required = false,
-  error,
   minSearchLength = 1,
   searchEnabled = true,
-  maxLength,
+  dontOpenOnFirstFocus = false,
+  ...textInputProps
 }: FormSearchBarProps) {
+  const shouldSkipFocus = useRef(dontOpenOnFirstFocus);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function handleFocus() {
+    if (shouldSkipFocus.current) {
+      shouldSkipFocus.current = false;
+      return;
+    }
+
+    combobox.openDropdown();
+  }
+
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
@@ -76,15 +86,11 @@ function FormSearchBar({
     >
       <Combobox.Target>
         <TextInput
-          label={label}
-          placeholder={placeholder}
+          ref={inputRef}
           value={value}
-          required={required}
-          error={error}
-          disabled={disabled}
           onChange={(event) => handleChange(event.currentTarget.value)}
           onClick={() => combobox.openDropdown()}
-          onFocus={() => combobox.openDropdown()}
+          onFocus={handleFocus}
           onBlur={() => combobox.closeDropdown()}
           rightSection={
             isLoading ? (
@@ -95,15 +101,18 @@ function FormSearchBar({
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => {
                   handleChange("");
+                  inputRef.current?.focus();
                 }}
               />
             ) : undefined
           }
-          maxLength={maxLength}
+          {...textInputProps}
         />
       </Combobox.Target>
 
-      <Combobox.Dropdown hidden={!value.trim() || disabled || !searchEnabled}>
+      <Combobox.Dropdown
+        hidden={(minSearchLength > 0 && !value.trim()) || textInputProps.disabled || !searchEnabled}
+      >
         <Combobox.Options mah={250} style={{ overflowY: "auto" }}>
           {searchQuery.length < minSearchLength ? (
             <Combobox.Empty>
